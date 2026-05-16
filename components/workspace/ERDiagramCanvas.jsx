@@ -35,6 +35,203 @@ const STEREOTYPE = {
 
 const NOTATION = { crowfoot:"Crow's Foot", idef1x:'IDEF1X', uml:'UML' };
 
+// ─── Canvas management helpers ────────────────────────────────────────────────
+const CANVAS_DEFAULT_STATE = (type = 'PDM') => ({
+  entities: [],
+  rels: [],
+  viewport: { x: 0, y: 0, scale: 0.85 },
+  history: [],
+  future: [],
+  modelLayer: type,
+  notation: 'crowfoot',
+  dialect: 'PostgreSQL',
+});
+
+const mkCanvasMeta = (name, type) => ({ id: uid(), name, type });
+
+// ─── CanvasTabBar ─────────────────────────────────────────────────────────────
+function CanvasTabBar({ canvases, activeId, onSwitch, onCreate, onClose, onRename }) {
+  const [editingId, setEditingId] = React.useState(null);
+  const [editVal,   setEditVal]   = React.useState('');
+  const [showNew,   setShowNew]   = React.useState(false);
+
+  const startRename = (e, c) => {
+    e.stopPropagation();
+    setEditingId(c.id); setEditVal(c.name);
+  };
+  const commitRename = (id) => {
+    if (editVal.trim()) onRename(id, editVal.trim());
+    setEditingId(null);
+  };
+
+  const typeColor = (t) => (LAYER_CONFIG[t] || LAYER_CONFIG.PDM).color;
+
+  return (
+    <div style={{
+      height: 34, display: 'flex', alignItems: 'center',
+      background: 'rgba(4,8,18,0.97)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      flexShrink: 0, overflowX: 'auto', overflowY: 'hidden', zIndex: 25,
+      scrollbarWidth: 'none',
+    }}>
+      {/* Canvas tabs */}
+      {canvases.map((c) => {
+        const isActive = c.id === activeId;
+        const tc = typeColor(c.type);
+        return (
+          <div
+            key={c.id}
+            onClick={() => onSwitch(c.id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '0 10px', height: '100%', cursor: 'pointer',
+              flexShrink: 0, minWidth: 100, maxWidth: 180,
+              borderRight: '1px solid rgba(255,255,255,0.06)',
+              background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
+              borderBottom: isActive ? `2px solid ${tc}` : '2px solid transparent',
+              transition: 'all 0.15s', position: 'relative',
+            }}
+            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+          >
+            {/* Type dot */}
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: tc,
+              flexShrink: 0, boxShadow: isActive ? `0 0 5px ${tc}` : 'none' }} />
+            {/* Name — editable on double-click */}
+            {editingId === c.id ? (
+              <input
+                autoFocus value={editVal}
+                onChange={e => setEditVal(e.target.value)}
+                onBlur={() => commitRename(c.id)}
+                onKeyDown={e => { if (e.key === 'Enter') commitRename(c.id); if (e.key === 'Escape') setEditingId(null); }}
+                onClick={e => e.stopPropagation()}
+                style={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(34,211,238,0.4)',
+                  borderRadius: 3, color: '#e2e8f0', fontSize: 10, padding: '1px 4px', outline: 'none',
+                  fontFamily: "'JetBrains Mono',monospace", width: 90, flexShrink: 0 }}
+              />
+            ) : (
+              <span
+                onDoubleClick={e => startRename(e, c)}
+                title={`${c.name} (${c.type}) — dbl-click to rename`}
+                style={{
+                  fontSize: 10, fontFamily: "'JetBrains Mono',monospace",
+                  color: isActive ? '#e2e8f0' : '#64748b',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  flex: 1, userSelect: 'none',
+                }}
+              >
+                {c.name}
+              </span>
+            )}
+            {/* Type badge */}
+            <span style={{
+              fontSize: 8, padding: '1px 4px', borderRadius: 3, flexShrink: 0,
+              background: `${tc}18`, color: tc, border: `1px solid ${tc}33`,
+              fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, letterSpacing: '0.05em',
+            }}>{c.type}</span>
+            {/* Close — only show if more than 1 canvas */}
+            {canvases.length > 1 && (
+              <button
+                onClick={e => { e.stopPropagation(); onClose(c.id); }}
+                style={{ background: 'none', border: 'none', color: '#334155', cursor: 'pointer',
+                  fontSize: 10, padding: '1px 2px', flexShrink: 0, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', borderRadius: 3 }}
+                onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                onMouseLeave={e => e.currentTarget.style.color = '#334155'}
+                title="Close canvas"
+              >✕</button>
+            )}
+          </div>
+        );
+      })}
+      {/* "+" new canvas button */}
+      <button
+        onClick={() => setShowNew(true)}
+        title="New canvas (Ctrl+Shift+N)"
+        style={{
+          height: '100%', padding: '0 14px', background: 'none',
+          border: 'none', borderRight: '1px solid rgba(255,255,255,0.05)',
+          color: '#334155', cursor: 'pointer', fontSize: 16,
+          fontFamily: "'JetBrains Mono',monospace", flexShrink: 0,
+          transition: 'all 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#22d3ee'; e.currentTarget.style.background = 'rgba(34,211,238,0.06)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = '#334155'; e.currentTarget.style.background = 'none'; }}
+      >+</button>
+
+      {/* New canvas dialog */}
+      {showNew && (
+        <NewCanvasDialog
+          onConfirm={(name, type) => { onCreate(name, type); setShowNew(false); }}
+          onClose={() => setShowNew(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── NewCanvasDialog ──────────────────────────────────────────────────────────
+function NewCanvasDialog({ onConfirm, onClose }) {
+  const [name, setName] = React.useState('New Canvas');
+  const [type, setType] = React.useState('PDM');
+  const inp = {
+    background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 6, color: '#e2e8f0', padding: '7px 10px', fontSize: 12,
+    fontFamily: "'JetBrains Mono',monospace", outline: 'none', width: '100%', boxSizing: 'border-box',
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 700, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: 'linear-gradient(135deg,rgba(12,20,42,0.99),rgba(6,10,22,0.99))',
+        border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 24, width: 360,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.7)', fontFamily: "'JetBrains Mono',monospace" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>New Canvas</div>
+        <div style={{ fontSize: 10, color: '#475569', marginBottom: 18 }}>Each canvas is an independent diagram workspace</div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Canvas Name</div>
+          <input style={inp} value={name} autoFocus onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && name.trim() && onConfirm(name.trim(), type)} />
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Model Layer</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {Object.entries(LAYER_CONFIG).map(([k, v]) => (
+              <label key={k} onClick={() => setType(k)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  background: type === k ? `${v.color}14` : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${type === k ? v.color + '44' : 'rgba(255,255,255,0.07)'}` }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: v.color, flexShrink: 0,
+                  boxShadow: type === k ? `0 0 8px ${v.color}` : 'none' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: type === k ? v.color : '#94a3b8', fontWeight: type === k ? 700 : 400 }}>
+                    {v.abbr} — {v.name}
+                  </div>
+                  <div style={{ fontSize: 9, color: '#475569' }}>{v.desc}</div>
+                </div>
+                {type === k && <span style={{ color: v.color, fontSize: 12 }}>✓</span>}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8, color: '#94a3b8', cursor: 'pointer', padding: '8px 16px', fontSize: 11,
+              fontFamily: "'JetBrains Mono',monospace" }}>Cancel</button>
+          <button onClick={() => name.trim() && onConfirm(name.trim(), type)}
+            style={{ background: `${(LAYER_CONFIG[type]||LAYER_CONFIG.PDM).color}22`,
+              border: `1px solid ${(LAYER_CONFIG[type]||LAYER_CONFIG.PDM).color}55`,
+              borderRadius: 8, color: (LAYER_CONFIG[type]||LAYER_CONFIG.PDM).color,
+              cursor: 'pointer', padding: '8px 16px', fontSize: 11,
+              fontFamily: "'JetBrains Mono',monospace" }}>
+            + Create Canvas
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const uid  = () => Math.random().toString(36).slice(2, 9);
@@ -841,7 +1038,12 @@ function EntityCard({ entity, isSelected, isMultiSelected, onMouseDown, onDouble
             {entity.subjectArea}
           </text>
         )}
-        <circle cx={ENTITY_W} cy={HEADER_H/2} r={6} fill={entity.color} opacity={0.8}
+        {/* Lock indicator for CDM */}
+      {entity.locked && (
+        <text x={ENTITY_W - 20} y={HEADER_H/2 + 5} fontSize={11} fill="#fbbf24"
+          style={{userSelect:'none',pointerEvents:'none'}} title="Locked">🔒</text>
+      )}
+      <circle cx={ENTITY_W} cy={HEADER_H/2} r={6} fill={entity.color} opacity={0.8}
           style={{cursor:'crosshair'}}
           onMouseDown={(e)=>{ e.stopPropagation(); onConnectStart(e,entity.id); }}/>
       </g>
@@ -877,6 +1079,11 @@ function EntityCard({ entity, isSelected, isMultiSelected, onMouseDown, onDouble
             fontFamily="'JetBrains Mono',monospace" fontWeight="700" style={{userSelect:'none'}}>
             {stereo.icon} {stereo.label}
           </text></>
+      )}
+      {/* Lock indicator */}
+      {entity.locked && (
+        <text x={ENTITY_W - 20} y={HEADER_H/2 + 5} fontSize={11} fill="#fbbf24"
+          style={{userSelect:'none',pointerEvents:'none'}}>🔒</text>
       )}
       {/* Entity name */}
       <text x={14} y={HEADER_H/2+5} fill={entity.color} fontSize={13} fontWeight="700"
@@ -1238,6 +1445,10 @@ function PropertiesPanel({ entity, rels, entities, onUpdate, onAddCol, onDelCol,
                 placeholder="e.g. core, pii, sensitive, audit" style={inp}/>
             </div>
             <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'4px 0' }}/>
+            <button onClick={() => onUpdate({ locked: !entity.locked })}
+              style={{ ...btn(entity.locked ? '#fbbf24' : '#64748b'), width:'100%', padding:'7px', fontSize:11 }}>
+              {entity.locked ? '🔓 Unlock Entity' : '🔒 Lock Entity (prevent drag)'}
+            </button>
             <button onClick={onDeleteEntity}
               style={{ ...btn('#f87171'), width:'100%', padding:'8px', fontSize:11 }}>
               🗑 Delete Table
@@ -1788,7 +1999,8 @@ function ContextMenu({ x, y, items, onClose }) {
 
 // ─── Toolbar (top) ─────────────────────────────────────────────────────────────
 function TopToolbar({ tool, setTool, onNew, onTemplate, onUndo, onRedo, onFitView, onExportPNG,
-                      onExportSVG, onExportJSON, zoom, canUndo, canRedo,
+                      onExportSVG, onExportJSON, onImportJSON, onToggleFullscreen, isFullscreen,
+                      zoom, canUndo, canRedo,
                       dialect, setDialect, onValidate, onAutoLayout,
                       modelLayer, setModelLayer, notation, setNotation,
                       showNotationLegend, setShowNotationLegend }) {
@@ -1824,7 +2036,9 @@ function TopToolbar({ tool, setTool, onNew, onTemplate, onUndo, onRedo, onFitVie
         { icon:'📋', label:'Template', fn:onTemplate     },
         { icon:'SVG', label:'SVG',    fn:onExportSVG    },
         { icon:'PNG', label:'PNG',    fn:onExportPNG    },
-        { icon:'{}',  label:'JSON',   fn:onExportJSON   },
+        { icon:'{}',  label:'JSON↓',  fn:onExportJSON   },
+        { icon:'⤴',   label:'Import', fn:onImportJSON   },
+        { icon: isFullscreen ? '⛶' : '⛶', label: isFullscreen ? 'Exit FS' : 'Full', fn: onToggleFullscreen },
       ].map(btn=>(
         <button key={btn.label} onClick={btn.fn} style={B}
           onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.color='#e2e8f0';}}
@@ -1913,7 +2127,7 @@ function LeftToolbar({ tool, setTool }) {
 }
 
 // ─── Status Bar (enterprise — shows layer, notation, entity/rel counts) ────────
-function StatusBar({ zoom, entities, rels, selectedIds, tool, message, modelLayer, notation }) {
+function StatusBar({ zoom, entities, rels, selectedIds, tool, message, modelLayer, notation, canvasCount }) {
   const layerCfg = LAYER_CONFIG[modelLayer] || LAYER_CONFIG.PDM;
   const totalCols = entities.reduce((s,e)=>s+e.columns.length,0);
   const sep = <span style={{ color:'rgba(255,255,255,0.08)', padding:'0 2px' }}>│</span>;
@@ -1938,7 +2152,8 @@ function StatusBar({ zoom, entities, rels, selectedIds, tool, message, modelLaye
       <span style={{ color:'#475569' }}>{entities.length} tables · {rels.length} rels · {totalCols} cols</span>
       {selectedIds.length > 0 && <>{sep}<span style={{color:'#a78bfa'}}>{selectedIds.length} selected</span></>}
       {message && <>{sep}<span style={{color:'#34d399', animation:'none'}}>{message}</span></>}
-      <span style={{ marginLeft:'auto', color:'#1e293b', fontSize:9 }}>Data OS — ER Diagram Studio v3.0</span>
+      {canvasCount > 1 && <>{sep}<span style={{color:'#475569'}}>📐 {canvasCount} canvases</span></>}
+      <span style={{ marginLeft:'auto', color:'#1e293b', fontSize:9 }}>Data OS — ER Diagram Studio v4.0 · Multi-Canvas</span>
     </div>
   );
 }
@@ -2005,6 +2220,18 @@ function TemplatePicker({ onApply, onClose }) {
 
 // ─── Main ERDiagramCanvas Component ──────────────────────────────────────────
 export default function ERDiagramCanvas() {
+  // ── Multi-Canvas State ─────────────────────────────────────────────────────
+  const [canvasList, setCanvasList] = useState(() => [{ id: 'canvas-1', name: 'Main Model', type: 'PDM' }]);
+  const [activeCanvasId, setActiveCanvasId] = useState('canvas-1');
+  const savedCanvasesRef = useRef({});       // { canvasId → snapshot }
+  const activeCanvasIdRef = useRef('canvas-1');
+  const canvasListRef = useRef(canvasList);
+  useEffect(() => { canvasListRef.current = canvasList; }, [canvasList]);
+
+  // ── Fullscreen State ───────────────────────────────────────────────────────
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const erRootRef = useRef(null);
+
   // ── Initial State (lazy initialisers so uid() runs once) ───────────────────
   const [entities,  setEntities]  = useState(() => DEFAULT_ENTITIES.map(e => ({...e})));
   const [rels,      setRels]      = useState(() => buildDefaultRels(DEFAULT_ENTITIES));
@@ -2051,6 +2278,18 @@ export default function ERDiagramCanvas() {
   useEffect(() => { viewportRef.current  = viewport;  }, [viewport]);
   useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
   useEffect(() => { connectDragRef.current = connectDrag; }, [connectDrag]);
+
+  // Extra refs needed for canvas-switch snapshots (avoid stale closures)
+  const historyRef     = useRef(history);
+  const futureRef      = useRef(future);
+  const modelLayerRef  = useRef(modelLayer);
+  const notationRef    = useRef(notation);
+  const dialectRef     = useRef(dialect);
+  useEffect(() => { historyRef.current    = history;    }, [history]);
+  useEffect(() => { futureRef.current     = future;     }, [future]);
+  useEffect(() => { modelLayerRef.current = modelLayer; }, [modelLayer]);
+  useEffect(() => { notationRef.current   = notation;   }, [notation]);
+  useEffect(() => { dialectRef.current    = dialect;    }, [dialect]);
 
   // ── ResizeObserver ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -2133,6 +2372,131 @@ export default function ERDiagramCanvas() {
   const showStatus = useCallback((msg) => {
     setStatusMsg(msg);
     setTimeout(() => setStatusMsg(''), 3000);
+  }, []);
+
+  // ── Canvas management ───────────────────────────────────────────────────────
+  const switchCanvas = useCallback((toId) => {
+    const currentId = activeCanvasIdRef.current;
+    if (toId === currentId) return;
+
+    // Save snapshot of current working state into ref (no re-render needed)
+    savedCanvasesRef.current[currentId] = {
+      entities:   entitiesRef.current,
+      rels:       relsRef.current,
+      viewport:   viewportRef.current,
+      history:    historyRef.current,
+      future:     futureRef.current,
+      modelLayer: modelLayerRef.current,
+      notation:   notationRef.current,
+      dialect:    dialectRef.current,
+    };
+
+    // Load target canvas snapshot (or defaults for brand-new)
+    const snap = savedCanvasesRef.current[toId];
+    const targetMeta = canvasListRef.current.find(c => c.id === toId);
+
+    setEntities(snap ? snap.entities   : []);
+    setRels(    snap ? snap.rels       : []);
+    setViewport(snap ? snap.viewport   : { x: 0, y: 0, scale: 0.85 });
+    setHistory( snap ? snap.history    : []);
+    setFuture(  snap ? snap.future     : []);
+    setModelLayer(snap ? snap.modelLayer : (targetMeta?.type || 'PDM'));
+    setNotation(  snap ? snap.notation   : 'crowfoot');
+    setDialect(   snap ? snap.dialect    : 'PostgreSQL');
+
+    // Clear UI transient state
+    setSelectedId(null);
+    setSelectedIds([]);
+    setSelectedRel(null);
+    setContextMenu(null);
+    setConnectDrag(null);
+    setConnectDlg(null);
+    setRubber(null);
+
+    setActiveCanvasId(toId);
+    activeCanvasIdRef.current = toId;
+    showStatus(`Switched to "${targetMeta?.name || toId}"`);
+  }, [showStatus]);
+
+  const createCanvas = useCallback((name, type) => {
+    const meta = mkCanvasMeta(name, type);
+    setCanvasList(prev => [...prev, meta]);
+    // Initialize snapshot for the new canvas as empty defaults
+    savedCanvasesRef.current[meta.id] = { ...CANVAS_DEFAULT_STATE(type) };
+    // Switch to it immediately
+    setTimeout(() => switchCanvas(meta.id), 0);
+    showStatus(`Canvas "${name}" created`);
+  }, [switchCanvas, showStatus]);
+
+  const deleteCanvas = useCallback((id) => {
+    const list = canvasListRef.current;
+    if (list.length <= 1) { showStatus('Cannot close the last canvas'); return; }
+    const name = list.find(c => c.id === id)?.name || id;
+    if (!window.confirm(`Close canvas "${name}"? Any unsaved changes will be lost.`)) return;
+    const newList = list.filter(c => c.id !== id);
+    // If closing active, switch first
+    if (id === activeCanvasIdRef.current) {
+      const nextId = newList[0].id;
+      switchCanvas(nextId);
+    }
+    delete savedCanvasesRef.current[id];
+    setCanvasList(newList);
+    showStatus(`Canvas "${name}" closed`);
+  }, [switchCanvas, showStatus]);
+
+  const renameCanvas = useCallback((id, newName) => {
+    setCanvasList(prev => prev.map(c => c.id === id ? { ...c, name: newName } : c));
+  }, []);
+
+  // ── Import JSON ─────────────────────────────────────────────────────────────
+  const importJSON = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          // Validate minimal shape
+          if (!Array.isArray(data.entities)) throw new Error('Missing entities array');
+          const ents = data.entities.map(e => ({ ...e, id: e.id || uid() }));
+          const rs   = (data.rels || []).map(r => ({ ...r, id: r.id || uid() }));
+          pushHistory(entitiesRef.current, relsRef.current);
+          setEntities(ents);
+          setRels(rs);
+          if (data.modelLayer) setModelLayer(data.modelLayer);
+          if (data.notation)   setNotation(data.notation);
+          if (data.dialect)    setDialect(data.dialect);
+          setSelectedId(null); setSelectedIds([]);
+          // fitView is defined later — use ref to avoid TDZ
+          setTimeout(() => fitViewRef.current?.(), 100);
+          showStatus(`Imported: ${ents.length} tables, ${rs.length} relationships`);
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [pushHistory, showStatus]);
+
+  // ── Fullscreen ──────────────────────────────────────────────────────────────
+  const toggleFullscreen = useCallback(() => {
+    const el = erRootRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
   // ── CRUD ────────────────────────────────────────────────────────────────────
@@ -2249,6 +2613,9 @@ export default function ERDiagramCanvas() {
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     setViewport({ x: w / 2 - cx * newScale, y: h / 2 - cy * newScale, scale: newScale });
   }, []);
+  // Keep ref so importJSON (defined earlier) can call fitView without TDZ issue
+  const fitViewRef = useRef(null);
+  fitViewRef.current = fitView;
 
   // ── Exports ──────────────────────────────────────────────────────────────────
   const exportSVG = useCallback(() => {
@@ -2348,6 +2715,18 @@ export default function ERDiagramCanvas() {
     const onKey = (e) => {
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Ctrl+Shift+N → new canvas
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'N') { e.preventDefault(); /* trigger via tab bar "+" */ return; }
+      // Tab/Shift+Tab → switch canvas
+      if (e.key === 'Tab' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        const list = canvasListRef.current;
+        const idx  = list.findIndex(c => c.id === activeCanvasIdRef.current);
+        const next = list[(idx + 1) % list.length];
+        if (next) switchCanvas(next.id);
+        return;
+      }
+      if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
       if (e.key === 'v' && !e.ctrlKey && !e.metaKey) { setTool('select'); return; }
       if (e.key === 'a' && !e.ctrlKey && !e.metaKey) { setTool('add');    return; }
       if (e.key === 'c' && !e.ctrlKey && !e.metaKey) { setTool('connect');return; }
@@ -2369,7 +2748,7 @@ export default function ERDiagramCanvas() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, copySelected, pasteClipboard, selectedIds, selectedRel, deleteEntity, deleteRelationship, fitView]);
+  }, [undo, redo, copySelected, pasteClipboard, selectedIds, selectedRel, deleteEntity, deleteRelationship, fitView, switchCanvas, toggleFullscreen]);
 
   // ── Canvas mouse down ───────────────────────────────────────────────────────
   const onCanvasMouseDown = useCallback((e) => {
@@ -2402,6 +2781,10 @@ export default function ERDiagramCanvas() {
 
     if (tool === 'delete') { deleteEntity(entityId); return; }
     if (tool === 'connect') return;
+    if (entity.locked && tool === 'select') {
+      // Still allow selection of locked entities, but not dragging
+      setSelectedId(entityId); setSelectedIds([entityId]); setSelectedRel(null); return;
+    }
 
     const newIds = e.shiftKey
       ? (selectedIds.includes(entityId) ? selectedIds.filter(id => id !== entityId) : [...selectedIds, entityId])
@@ -2411,7 +2794,9 @@ export default function ERDiagramCanvas() {
     else setSelectedIds(newIds);
     setSelectedRel(null);
 
-    const draggingIds = newIds.length ? newIds : [entityId];
+    const draggingIds = (newIds.length ? newIds : [entityId])
+      .filter(id => !entitiesRef.current.find(e => e.id === id)?.locked);
+    if (!draggingIds.length) return;   // all selected are locked
     setDragState({
       type: 'entity', ids: draggingIds, draggingIds,
       startPtX: pt.x, startPtY: pt.y,
@@ -2531,6 +2916,8 @@ export default function ERDiagramCanvas() {
       }},
       { icon: '📌', label: 'Copy', action: () => { setClipboard([entity]); showStatus('Copied'); }},
       'separator',
+      { icon: entity.locked ? '🔓' : '🔒', label: entity.locked ? 'Unlock Entity' : 'Lock Entity',
+        action: () => updateEntity(entityId, { locked: !entity.locked }) },
       { icon: '↗',  label: 'Connect From Here', action: () => setTool('connect') },
       { icon: '🔎', label: 'View SQL',           action: () => { setSelectedId(entityId); setSelectedIds([entityId]); setRightTab('sql'); }},
       'separator',
@@ -2608,7 +2995,7 @@ export default function ERDiagramCanvas() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', background: '#060d1a' }}>
+    <div ref={erRootRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', background: '#060d1a' }}>
 
       {/* ── Top Toolbar ── */}
       <TopToolbar
@@ -2621,6 +3008,9 @@ export default function ERDiagramCanvas() {
         onExportSVG={exportSVG}
         onExportPNG={exportPNG}
         onExportJSON={exportJSON}
+        onImportJSON={importJSON}
+        onToggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
         zoom={viewport.scale}
         dialect={dialect} setDialect={setDialect}
         onValidate={() => setRightTab('validation')}
@@ -2628,6 +3018,16 @@ export default function ERDiagramCanvas() {
         modelLayer={modelLayer} setModelLayer={setModelLayer}
         notation={notation} setNotation={setNotation}
         showNotationLegend={showNotationLegend} setShowNotationLegend={setShowNotationLegend}
+      />
+
+      {/* ── Canvas Tab Bar ── */}
+      <CanvasTabBar
+        canvases={canvasList}
+        activeId={activeCanvasId}
+        onSwitch={switchCanvas}
+        onCreate={createCanvas}
+        onClose={deleteCanvas}
+        onRename={renameCanvas}
       />
 
       {/* ── Main Body ── */}
@@ -2823,7 +3223,7 @@ export default function ERDiagramCanvas() {
       </div>{/* end main body */}
 
       {/* ── Status Bar ── */}
-      <StatusBar zoom={viewport.scale} entities={entities} rels={rels} selectedIds={selectedIds} tool={tool} message={statusMsg} modelLayer={modelLayer} notation={notation} />
+      <StatusBar zoom={viewport.scale} entities={entities} rels={rels} selectedIds={selectedIds} tool={tool} message={statusMsg} modelLayer={modelLayer} notation={notation} canvasCount={canvasList.length} />
 
       {/* ── Modals ── */}
       {showTemplate && (
