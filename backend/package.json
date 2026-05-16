@@ -1,0 +1,29 @@
+{
+  "name": "data-os-portfolio-backend",
+  "version": "1.0.0",
+  "description": "Express API server for Data-OS Portfolio",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "check": "node --check src/index.js && node --check src/routes/auth.js && node --check src/routes/jobs.js && node --check src/services/jobSearch.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.2.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.14",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsUserDoc(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/{document=**} {
+      allow read, write: if ownsUserDoc(userId);
+    }
+
+    match /pageVisits/{visitId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    match /uiEvents/{eventId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    match /contactSubmissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+  }
+}

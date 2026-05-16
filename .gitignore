@@ -1,0 +1,11 @@
+.env
+dist/
+node_modules/
+.npm-cache/
+backend/serviceAccount.json
+backend/.env
+*.key
+*.pem
+*.log
+*.zip
+port-status.txt

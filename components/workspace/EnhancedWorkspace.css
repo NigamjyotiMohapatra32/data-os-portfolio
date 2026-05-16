@@ -1,0 +1,138 @@
+/* Enhanced Workspace Styles */
+
+:root {
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --bg-primary: #0a0e27;
+  --bg-secondary: #1a0e3f;
+  --bg-tertiary: #0f1e4d;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --cyan: #22d3ee;
+  --emerald: #34d399;
+  --purple: #a78bfa;
+  --pink: #f472b6;
+  --amber: #fbbf24;
+  --teal: #06d6a0;
+  --magenta: #ff006e;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(34, 211, 238, 0.5);
+  }
+}
+
+/* Utility Classes */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-subtle {
+  color: var(--text-subtle);
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .right-sidebar {
+    width: 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .workspace-main {
+    flex-direction: column;
+  }
+
+  .right-sidebar {
+    width: 100%;
+    flex-direction: row;
+    max-height: 200px;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .enhanced-workspace-container {
+    flex-direction: column;
+  }
+
+  .workspace-body {
+    width: 100%;
+  }
+
+  .panel {
+    border-radius: 8px;
+  }
+
+  .right-sidebar {
+    width: 100%;
+    max-height: none;
+  }
+}
