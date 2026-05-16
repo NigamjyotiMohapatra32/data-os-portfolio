@@ -54,9 +54,9 @@ const STRENGTHS = [
 ];
 
 const CERTS = [
-  { name: 'Microsoft Certified: Azure Data Engineer Associate', vendor: 'Microsoft', color: '#22d3ee' },
-  { name: 'Data Modelling & Architecture Fundamentals', vendor: 'DAMA', color: '#a78bfa' },
-  { name: 'Advanced T-SQL for Data Professionals', vendor: 'QSpiders', color: '#34d399' },
+  { name: 'Advanced SQL & Database Training', vendor: 'QSpiders, Bangalore · 2019–2021', color: '#34d399' },
+  { name: 'B.Tech — Computer Science / IT', vendor: 'Odisha Engineering College, BPUT · 2015–2019', color: '#22d3ee' },
+  { name: 'ERwin & ER/Studio — Enterprise Data Modeling', vendor: 'On-the-job · EY GDS / Circana / TCS', color: '#a78bfa' },
 ];
 
 export default function AboutSection() {
@@ -92,14 +92,14 @@ export default function AboutSection() {
                 </div>
                 <div>
                   <div className="font-display font-semibold text-slate-100">Nigamjyoti Mohapatra</div>
-                  <div className="font-mono text-xs text-slate-500">Data Modeler · Azure Data Engineer</div>
+                  <div className="font-mono text-xs text-slate-500">Data Modeler / SQL Developer · EY GDS</div>
                 </div>
               </div>
 
               <p className="text-slate-300 leading-relaxed text-sm md:text-base">
-                I'm a <span className="text-cyan-300 font-semibold">Data Modeler &amp; Azure Data Engineer</span> with
-                <span className="text-slate-100"> 4.5+ years</span> of experience designing and delivering enterprise
-                data warehouse solutions across insurance, retail, and telecom domains.
+                I'm a <span className="text-cyan-300 font-semibold">Data Modeler / SQL Developer</span> with
+                <span className="text-slate-100"> 5 years</span> of experience designing and delivering enterprise
+                data warehouse solutions across insurance, retail/CPG, and vendor reporting domains.
               </p>
               <p className="text-slate-400 leading-relaxed text-sm">
                 My core strength is translating complex business requirements into clean, scalable
@@ -156,10 +156,10 @@ export default function AboutSection() {
               <div className="space-y-2.5 text-sm">
                 {[
                   ['Education', 'B.Tech · Odisha Engineering College'],
-                  ['Domains', 'Insurance · Retail · Telecom'],
-                  ['Tools', 'Erwin · ER Studio · SSMS · ADF'],
-                  ['Databases', 'SQL Server · Oracle · Azure Synapse'],
-                  ['Languages', 'T-SQL · PL/SQL · Python (basic)'],
+                  ['Domains', 'Insurance · Retail/CPG · Vendor SLA'],
+                  ['Tools', 'ERwin · ER/Studio · SSMS · Power BI · Git'],
+                  ['Databases', 'SQL Server · Snowflake · Azure Synapse'],
+                  ['Languages', 'T-SQL · SQL · Python · English · Odia'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-2">
                     <span className="font-mono text-[11px] text-slate-500">{k}</span>

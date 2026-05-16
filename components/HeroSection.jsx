@@ -59,19 +59,19 @@ function useCountUp(target, duration = 1800, start = false) {
 }
 
 const STATS = [
-  { label: 'Years Experience', value: 4.5, suffix: 'y', color: '#22d3ee', decimal: true },
+  { label: 'Years Experience', value: 5, suffix: 'y', color: '#22d3ee', decimal: false },
   { label: 'Data Models Built', value: 30, suffix: '+', color: '#34d399' },
   { label: 'Pipeline Jobs OK', value: 99, suffix: '.4%', color: '#a78bfa' },
   { label: 'Perf Improvement', value: 38, suffix: '%', color: '#f472b6' },
 ];
 
 function StatCard({ stat, animate }) {
-  const count = useCountUp(stat.decimal ? 4 : stat.value, 2000, animate);
+  const count = useCountUp(stat.value, 2000, animate);
   return (
     <div className="glass rounded-xl p-4 text-center flex flex-col gap-1 hover:border-white/20 transition-all duration-300"
          style={{ borderColor: `${stat.color}30` }}>
       <div className="font-mono font-bold text-2xl" style={{ color: stat.color }}>
-        {stat.decimal ? '4.5' : count}{stat.suffix}
+        {count}{stat.suffix}
       </div>
       <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider leading-tight">{stat.label}</div>
     </div>
@@ -115,7 +115,7 @@ export default function HeroSection({ onLaunchDataOS }) {
             <span className="text-emerald-400">PIPELINE_ACTIVE</span>
             <span className="text-slate-700">·</span>
             <span>UPTIME:</span>
-            <span className="text-cyan-300">4.5y</span>
+            <span className="text-cyan-300">5y</span>
           </div>
 
           {/* Name */}

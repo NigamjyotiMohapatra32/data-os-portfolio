@@ -49,7 +49,7 @@ export default function SQLEditor({ onQueryRun }) {
       setExecTime(Math.round(end - start));
       setResult({
         rows: [
-          ['Nigamjyoti Mohapatra', 'Data Modeler', 'Bengaluru', '4.5'],
+          ['Nigamjyoti Mohapatra', 'Data Modeler / SQL Developer', 'Bengaluru', '5'],
         ],
         cols: ['name', 'role', 'location', 'experience_years'],
       });

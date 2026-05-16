@@ -36,14 +36,14 @@ const TIMELINE = [
     detail: 'Mastered SQL query writing, database design concepts, SSIS basics, and performance tuning techniques under hands-on mentorship.',
   },
   {
-    period: 'Jul 2021 — Aug 2024',
+    period: 'May 2021 — Sept 2024',
     color: '#34d399',
     dot: '💼',
-    title: 'Data Modeler / ETL Developer',
+    title: 'Data Modeler / SQL Developer',
     org: 'TCS (Tata Consultancy Services)',
-    type: 'Work · 3.2 yrs',
-    tags: ['Telecom DWH','SSIS','T-SQL','SSAS','Erwin','Star Schema','SCD 1/2/3'],
-    detail: 'Built 80+-table telecom data warehouse serving 20M+ subscribers. Designed dimensional models, SSIS pipelines, SSAS cubes, and SSRS reports. Created the internal metadata-driven ETL framework.',
+    type: 'Work · 3.3 yrs',
+    tags: ['Global Vendor SLA','ERwin','T-SQL','SSMS','Star Schema','SCD 1/2/3','DDL Review'],
+    detail: 'Designed dimensional data models for a global vendor, SLA, and tool inventory reporting platform. Used ERwin for logical/physical models, DDL scripts, and reverse engineering of legacy SQL Server schemas. Built T-SQL stored procedures, views, and UDFs for analytics.',
   },
   {
     period: 'Sep 2024 — Sep 2025',
@@ -172,7 +172,7 @@ export default function TimelineSection() {
           <h2 className="font-display text-3xl md:text-5xl">Career Pipeline</h2>
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-rose-400/60 to-transparent" />
           <p className="mt-4 text-slate-400 text-sm max-w-xl">
-            From engineering foundations to senior data architecture — 4.5+ years of progressive expertise
+            From engineering foundations to senior data architecture — 5 years of progressive expertise
             across TCS, Circana, and EY GDS.
           </p>
         </header>
