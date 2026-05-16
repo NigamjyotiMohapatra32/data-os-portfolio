@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ENTITY_W = 220;
+const ENTITY_W = 240;
 const HEADER_H = 44;
 const COL_H    = 28;
 const FOOTER_H = 28;
@@ -263,79 +263,197 @@ function validateModel(entities, rels) {
 }
 
 
-// ─── Default Schema ───────────────────────────────────────────────────────────
+// ─── Default Schema — Insurance DWH Star Schema (EY GDS) ─────────────────────
 const DEFAULT_ENTITIES = [
   {
-    id: uid(), name: 'Customer', color: '#22d3ee', x: 80, y: 120,
-    stereotype: 'ENTITY', subjectArea: 'Sales', description: 'Represents a person or organization that purchases products or services.',
+    id: uid(), name: 'DimDate', color: '#60a5fa', x: 60, y: 60,
+    stereotype: 'DIMENSION', subjectArea: 'Time',
+    description: 'Date dimension for time-based analysis of policy and claim activity.',
     columns: [
-      mkCol('customer_id',  'INT',          { pk:true, nn:true, identity:true }),
-      mkCol('first_name',   'VARCHAR',      { nn:true, length:'50' }),
-      mkCol('last_name',    'VARCHAR',      { nn:true, length:'50' }),
-      mkCol('email',        'VARCHAR',      { nn:true, uq:true, length:'120' }),
-      mkCol('phone',        'VARCHAR',      { length:'20' }),
-      mkCol('created_at',   'TIMESTAMP',   { nn:true, default:'CURRENT_TIMESTAMP' }),
+      mkCol('date_key',    'INT',     { pk:true, nn:true }),
+      mkCol('full_date',   'DATE',    { nn:true }),
+      mkCol('year',        'INT',     { nn:true }),
+      mkCol('quarter',     'INT',     { nn:true }),
+      mkCol('month',       'INT',     { nn:true }),
+      mkCol('month_name',  'VARCHAR', { length:'10' }),
+      mkCol('is_weekend',  'BOOLEAN', { default:'false' }),
+      mkCol('is_holiday',  'BOOLEAN', { default:'false' }),
     ],
   },
   {
-    id: uid(), name: 'Orders', color: '#a78bfa', x: 380, y: 80,
-    stereotype: 'ENTITY', subjectArea: 'Sales', description: 'A purchase transaction placed by a customer.',
+    id: uid(), name: 'DimPolicy', color: '#a78bfa', x: 400, y: 60,
+    stereotype: 'DIMENSION', subjectArea: 'Policy',
+    description: 'Insurance policy dimension — coverage type, term, and premium details.',
     columns: [
-      mkCol('order_id',     'INT',          { pk:true, nn:true, identity:true }),
-      mkCol('customer_id',  'INT',          { fk:true, nn:true }),
-      mkCol('status',       'VARCHAR',      { nn:true, length:'20', default:"'pending'" }),
-      mkCol('total_amount', 'DECIMAL',      { nn:true, length:'12,2' }),
-      mkCol('order_date',   'TIMESTAMP',   { nn:true, default:'CURRENT_TIMESTAMP' }),
+      mkCol('policy_key',      'INT',     { pk:true, nn:true }),
+      mkCol('policy_no',       'VARCHAR', { nn:true, uq:true, length:'30' }),
+      mkCol('policy_type',     'VARCHAR', { nn:true, length:'50' }),
+      mkCol('inception_date',  'DATE',    { nn:true }),
+      mkCol('expiry_date',     'DATE',    { nn:true }),
+      mkCol('premium_amount',  'DECIMAL', { nn:true, length:'14,2' }),
+      mkCol('is_active',       'BOOLEAN', { default:'true' }),
     ],
   },
   {
-    id: uid(), name: 'Product', color: '#34d399', x: 680, y: 120,
-    stereotype: 'ENTITY', subjectArea: 'Catalog', description: 'An item available for purchase in the product catalog.',
+    id: uid(), name: 'DimCustomer', color: '#22d3ee', x: 740, y: 60,
+    stereotype: 'DIMENSION', subjectArea: 'Customer',
+    description: 'SCD Type 2 customer dimension with demographic and segmentation attributes.',
     columns: [
-      mkCol('product_id',   'INT',          { pk:true, nn:true, identity:true }),
-      mkCol('name',         'VARCHAR',      { nn:true, length:'100' }),
-      mkCol('price',        'DECIMAL',      { nn:true, length:'10,2' }),
-      mkCol('stock',        'INT',          { nn:true, default:'0' }),
-      mkCol('category_id',  'INT',          { fk:true }),
+      mkCol('customer_key', 'INT',     { pk:true, nn:true }),
+      mkCol('customer_no',  'VARCHAR', { nn:true, uq:true, length:'30' }),
+      mkCol('full_name',    'VARCHAR', { nn:true, length:'120' }),
+      mkCol('dob',          'DATE',    {}),
+      mkCol('email',        'VARCHAR', { length:'120' }),
+      mkCol('city',         'VARCHAR', { length:'60' }),
+      mkCol('segment',      'VARCHAR', { length:'40' }),
+      mkCol('scd_start',    'DATE',    { nn:true }),
+      mkCol('scd_end',      'DATE',    {}),
+      mkCol('is_current',   'BOOLEAN', { default:'true' }),
     ],
   },
   {
-    id: uid(), name: 'OrderItem', color: '#fbbf24', x: 380, y: 380,
-    stereotype: 'ENTITY', subjectArea: 'Sales', description: 'A single line item within a customer order.',
+    id: uid(), name: 'FactPolicyClaims', color: '#f59e0b', x: 400, y: 300,
+    stereotype: 'FACT', subjectArea: 'Claims',
+    description: 'Central fact table for insurance policy claims — grain: one row per claim event.',
     columns: [
-      mkCol('item_id',      'INT',          { pk:true, nn:true, identity:true }),
-      mkCol('order_id',     'INT',          { fk:true, nn:true }),
-      mkCol('product_id',   'INT',          { fk:true, nn:true }),
-      mkCol('quantity',     'INT',          { nn:true, default:'1' }),
-      mkCol('unit_price',   'DECIMAL',      { nn:true, length:'10,2' }),
+      mkCol('claim_key',       'INT',     { pk:true, nn:true, identity:true }),
+      mkCol('policy_key',      'INT',     { fk:true, nn:true }),
+      mkCol('customer_key',    'INT',     { fk:true, nn:true }),
+      mkCol('agent_key',       'INT',     { fk:true, nn:true }),
+      mkCol('product_key',     'INT',     { fk:true, nn:true }),
+      mkCol('claim_date_key',  'INT',     { fk:true, nn:true }),
+      mkCol('claim_amount',    'DECIMAL', { nn:true, length:'14,2' }),
+      mkCol('approved_amount', 'DECIMAL', { length:'14,2' }),
+      mkCol('status',          'VARCHAR', { nn:true, length:'30' }),
+      mkCol('settlement_days', 'INT',     {}),
     ],
   },
   {
-    id: uid(), name: 'Category', color: '#f472b6', x: 680, y: 420,
-    stereotype: 'ENTITY', subjectArea: 'Catalog', description: 'A hierarchical classification grouping for products.',
+    id: uid(), name: 'DimAgent', color: '#34d399', x: 60, y: 500,
+    stereotype: 'DIMENSION', subjectArea: 'Agency',
+    description: 'Insurance agent / broker dimension with branch and regional hierarchy.',
     columns: [
-      mkCol('category_id',  'INT',          { pk:true, nn:true, identity:true }),
-      mkCol('name',         'VARCHAR',      { nn:true, uq:true, length:'80' }),
-      mkCol('parent_id',    'INT',          { description:'Self-referencing' }),
+      mkCol('agent_key',   'INT',     { pk:true, nn:true }),
+      mkCol('agent_code',  'VARCHAR', { nn:true, uq:true, length:'20' }),
+      mkCol('agent_name',  'VARCHAR', { nn:true, length:'120' }),
+      mkCol('branch',      'VARCHAR', { length:'80' }),
+      mkCol('region',      'VARCHAR', { length:'60' }),
+      mkCol('is_active',   'BOOLEAN', { default:'true' }),
+    ],
+  },
+  {
+    id: uid(), name: 'DimProduct', color: '#f472b6', x: 740, y: 500,
+    stereotype: 'DIMENSION', subjectArea: 'Product',
+    description: 'Insurance product / line-of-business dimension.',
+    columns: [
+      mkCol('product_key',   'INT',     { pk:true, nn:true }),
+      mkCol('product_code',  'VARCHAR', { nn:true, uq:true, length:'20' }),
+      mkCol('product_name',  'VARCHAR', { nn:true, length:'100' }),
+      mkCol('product_line',  'VARCHAR', { length:'60' }),
+      mkCol('category',      'VARCHAR', { length:'60' }),
+      mkCol('is_active',     'BOOLEAN', { default:'true' }),
     ],
   },
 ];
 
 const buildDefaultRels = (entities) => {
   const find = (name) => entities.find(e => e.name === name);
-  const C = find('Customer'), O = find('Orders'), P = find('Product'),
-        OI = find('OrderItem'), Cat = find('Category');
-  if (!C || !O || !P || !OI || !Cat) return [];
+  const fact    = find('FactPolicyClaims');
+  const policy  = find('DimPolicy');
+  const cust    = find('DimCustomer');
+  const agent   = find('DimAgent');
+  const product = find('DimProduct');
+  const date    = find('DimDate');
+  if (!fact || !policy || !cust || !agent || !product || !date) return [];
   return [
-    { id: uid(), fromId: O.id,  toId: C.id,   fromCard:'many', toCard:'one',  label:'places' },
-    { id: uid(), fromId: OI.id, toId: O.id,   fromCard:'many', toCard:'one',  label:'belongs_to' },
-    { id: uid(), fromId: OI.id, toId: P.id,   fromCard:'many', toCard:'one',  label:'contains' },
-    { id: uid(), fromId: P.id,  toId: Cat.id, fromCard:'many', toCard:'one',  label:'categorized_by' },
+    { id: uid(), fromId: fact.id, toId: date.id,    fromCard:'many', toCard:'one', label:'on date' },
+    { id: uid(), fromId: fact.id, toId: policy.id,  fromCard:'many', toCard:'one', label:'under policy' },
+    { id: uid(), fromId: fact.id, toId: cust.id,    fromCard:'many', toCard:'one', label:'by customer' },
+    { id: uid(), fromId: fact.id, toId: agent.id,   fromCard:'many', toCard:'one', label:'via agent' },
+    { id: uid(), fromId: fact.id, toId: product.id, fromCard:'many', toCard:'one', label:'for product' },
   ];
 };
 
 // ─── Templates ────────────────────────────────────────────────────────────────
 const TEMPLATES = {
+  'Insurance DWH': () => {
+    const dimDate={id:uid(),name:'DimDate',color:'#60a5fa',x:60,y:60,stereotype:'DIMENSION',subjectArea:'Time',
+      description:'Date dimension for time-based analysis of policy and claim activity.',
+      columns:[mkCol('date_key','INT',{pk:true,nn:true}),mkCol('full_date','DATE',{nn:true}),
+        mkCol('year','INT',{nn:true}),mkCol('quarter','INT',{nn:true}),mkCol('month','INT',{nn:true}),
+        mkCol('month_name','VARCHAR',{length:'10'}),mkCol('is_weekend','BOOLEAN',{default:'false'}),
+        mkCol('is_holiday','BOOLEAN',{default:'false'})]};
+    const dimPolicy={id:uid(),name:'DimPolicy',color:'#a78bfa',x:400,y:60,stereotype:'DIMENSION',subjectArea:'Policy',
+      description:'Insurance policy dimension — coverage type, term, and premium details.',
+      columns:[mkCol('policy_key','INT',{pk:true,nn:true}),mkCol('policy_no','VARCHAR',{nn:true,uq:true,length:'30'}),
+        mkCol('policy_type','VARCHAR',{nn:true,length:'50'}),mkCol('inception_date','DATE',{nn:true}),
+        mkCol('expiry_date','DATE',{nn:true}),mkCol('premium_amount','DECIMAL',{nn:true,length:'14,2'}),
+        mkCol('is_active','BOOLEAN',{default:'true'})]};
+    const dimCustomer={id:uid(),name:'DimCustomer',color:'#22d3ee',x:740,y:60,stereotype:'DIMENSION',subjectArea:'Customer',
+      description:'SCD Type 2 customer dimension with demographic and segmentation attributes.',
+      columns:[mkCol('customer_key','INT',{pk:true,nn:true}),mkCol('customer_no','VARCHAR',{nn:true,uq:true,length:'30'}),
+        mkCol('full_name','VARCHAR',{nn:true,length:'120'}),mkCol('dob','DATE',{}),mkCol('email','VARCHAR',{length:'120'}),
+        mkCol('city','VARCHAR',{length:'60'}),mkCol('segment','VARCHAR',{length:'40'}),
+        mkCol('scd_start','DATE',{nn:true}),mkCol('scd_end','DATE',{}),mkCol('is_current','BOOLEAN',{default:'true'})]};
+    const fact={id:uid(),name:'FactPolicyClaims',color:'#f59e0b',x:400,y:300,stereotype:'FACT',subjectArea:'Claims',
+      description:'Central fact table for insurance policy claims — grain: one row per claim event.',
+      columns:[mkCol('claim_key','INT',{pk:true,nn:true,identity:true}),mkCol('policy_key','INT',{fk:true,nn:true}),
+        mkCol('customer_key','INT',{fk:true,nn:true}),mkCol('agent_key','INT',{fk:true,nn:true}),
+        mkCol('product_key','INT',{fk:true,nn:true}),mkCol('claim_date_key','INT',{fk:true,nn:true}),
+        mkCol('claim_amount','DECIMAL',{nn:true,length:'14,2'}),mkCol('approved_amount','DECIMAL',{length:'14,2'}),
+        mkCol('status','VARCHAR',{nn:true,length:'30'}),mkCol('settlement_days','INT',{})]};
+    const dimAgent={id:uid(),name:'DimAgent',color:'#34d399',x:60,y:500,stereotype:'DIMENSION',subjectArea:'Agency',
+      description:'Insurance agent / broker dimension with branch and regional hierarchy.',
+      columns:[mkCol('agent_key','INT',{pk:true,nn:true}),mkCol('agent_code','VARCHAR',{nn:true,uq:true,length:'20'}),
+        mkCol('agent_name','VARCHAR',{nn:true,length:'120'}),mkCol('branch','VARCHAR',{length:'80'}),
+        mkCol('region','VARCHAR',{length:'60'}),mkCol('is_active','BOOLEAN',{default:'true'})]};
+    const dimProduct={id:uid(),name:'DimProduct',color:'#f472b6',x:740,y:500,stereotype:'DIMENSION',subjectArea:'Product',
+      description:'Insurance product / line-of-business dimension.',
+      columns:[mkCol('product_key','INT',{pk:true,nn:true}),mkCol('product_code','VARCHAR',{nn:true,uq:true,length:'20'}),
+        mkCol('product_name','VARCHAR',{nn:true,length:'100'}),mkCol('product_line','VARCHAR',{length:'60'}),
+        mkCol('category','VARCHAR',{length:'60'}),mkCol('is_active','BOOLEAN',{default:'true'})]};
+    const entities=[dimDate,dimPolicy,dimCustomer,fact,dimAgent,dimProduct];
+    const rels=[
+      {id:uid(),fromId:fact.id,toId:dimDate.id,    fromCard:'many',toCard:'one',label:'on date',      relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimPolicy.id,  fromCard:'many',toCard:'one',label:'under policy', relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimCustomer.id,fromCard:'many',toCard:'one',label:'by customer',  relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimAgent.id,   fromCard:'many',toCard:'one',label:'via agent',    relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimProduct.id, fromCard:'many',toCard:'one',label:'for product',  relType:'identifying'},
+    ];
+    return {entities,rels};
+  },
+
+  'Vendor SLA': () => {
+    const dimVendor={id:uid(),name:'DimVendor',color:'#22d3ee',x:60,y:60,stereotype:'DIMENSION',subjectArea:'Vendor',
+      description:'Vendor / supplier dimension with contract lifecycle attributes.',
+      columns:[mkCol('vendor_key','INT',{pk:true,nn:true}),mkCol('vendor_code','VARCHAR',{nn:true,uq:true,length:'20'}),
+        mkCol('vendor_name','VARCHAR',{nn:true,length:'120'}),mkCol('category','VARCHAR',{length:'60'}),
+        mkCol('contract_start','DATE',{}),mkCol('contract_end','DATE',{}),mkCol('is_active','BOOLEAN',{default:'true'})]};
+    const dimTool={id:uid(),name:'DimTool',color:'#34d399',x:620,y:60,stereotype:'DIMENSION',subjectArea:'Tool',
+      description:'Tool / system dimension tracked under vendor SLA agreements.',
+      columns:[mkCol('tool_key','INT',{pk:true,nn:true}),mkCol('tool_code','VARCHAR',{nn:true,uq:true,length:'20'}),
+        mkCol('tool_name','VARCHAR',{nn:true,length:'100'}),mkCol('tool_type','VARCHAR',{length:'50'}),
+        mkCol('owner','VARCHAR',{length:'80'}),mkCol('is_active','BOOLEAN',{default:'true'})]};
+    const dimPeriod={id:uid(),name:'DimPeriod',color:'#60a5fa',x:620,y:480,stereotype:'DIMENSION',subjectArea:'Time',
+      description:'Reporting period dimension (month-level granularity) for SLA measurement.',
+      columns:[mkCol('period_key','INT',{pk:true,nn:true}),mkCol('period_label','VARCHAR',{nn:true,length:'20'}),
+        mkCol('year','INT',{nn:true}),mkCol('quarter','INT',{nn:true}),mkCol('month','INT',{nn:true}),
+        mkCol('month_name','VARCHAR',{length:'10'})]};
+    const fact={id:uid(),name:'FactSLA',color:'#f59e0b',x:320,y:270,stereotype:'FACT',subjectArea:'SLA',
+      description:'Vendor SLA performance fact — grain: one row per vendor-tool-period combination.',
+      columns:[mkCol('sla_key','INT',{pk:true,nn:true,identity:true}),mkCol('vendor_key','INT',{fk:true,nn:true}),
+        mkCol('tool_key','INT',{fk:true,nn:true}),mkCol('period_key','INT',{fk:true,nn:true}),
+        mkCol('sla_target','DECIMAL',{nn:true,length:'8,4'}),mkCol('sla_actual','DECIMAL',{nn:true,length:'8,4'}),
+        mkCol('breach_count','INT',{default:'0'}),mkCol('penalty_amount','DECIMAL',{length:'14,2'})]};
+    const entities=[dimVendor,dimTool,dimPeriod,fact];
+    const rels=[
+      {id:uid(),fromId:fact.id,toId:dimVendor.id, fromCard:'many',toCard:'one',label:'by vendor',  relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimTool.id,   fromCard:'many',toCard:'one',label:'for tool',   relType:'identifying'},
+      {id:uid(),fromId:fact.id,toId:dimPeriod.id, fromCard:'many',toCard:'one',label:'in period',  relType:'identifying'},
+    ];
+    return {entities,rels};
+  },
+
   'Star Schema': () => {
     const fact = { id:uid(), name:'FactSales', color:'#f59e0b', x:320, y:260, stereotype:'FACT', subjectArea:'Sales',
       description:'Central fact table for sales transactions.',
