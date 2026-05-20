@@ -16,17 +16,36 @@ service cloud.firestore {
 
     match /pageVisits/{visitId} {
       allow create: if true;
-      allow read, update, delete: if false;
+      allow read, update, delete: if signedIn();
     }
 
     match /uiEvents/{eventId} {
       allow create: if true;
-      allow read, update, delete: if false;
+      allow read, update, delete: if signedIn();
     }
 
+    // Contact form submissions — anyone can create, only admin can read/delete
     match /contactSubmissions/{submissionId} {
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 2 &&
+        request.resource.data.name.size() <= 100 &&
+        request.resource.data.email is string &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() >= 10 &&
+        request.resource.data.message.size() <= 2000;
+      allow read, delete: if signedIn();
+      allow update: if false;
+    }
+
+    // Resume download counter — anyone can read count, anyone can increment
+    match /meta/{docId} {
+      allow read: if true;
       allow create: if true;
-      allow read, update, delete: if false;
+      // Only allow incrementing count field (not setting arbitrary data)
+      allow update: if
+        request.resource.data.keys().hasOnly(['count']) &&
+        request.resource.data.count == resource.data.count + 1;
     }
   }
 }

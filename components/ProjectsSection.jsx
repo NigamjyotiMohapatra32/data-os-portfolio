@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 function useReveal() {
   const ref = useRef(null);
@@ -16,7 +17,7 @@ function useReveal() {
 
 const PROJECTS = [
   {
-    title: 'Insurance Data Warehouse',
+    title: 'Insurance Data Warehouse & Reporting',
     org: 'EY GDS',
     period: 'Oct 2025 → Present',
     color: '#22d3ee',
@@ -24,83 +25,86 @@ const PROJECTS = [
     statusColor: '#34d399',
     metrics: [
       { label: 'Perf Gain', value: '+35%' },
-      { label: 'Fact Tables', value: '18' },
-      { label: 'Dim Tables', value: '42' },
+      { label: 'Subject Areas', value: '5' },
+      { label: 'Domains', value: 'Insurance' },
     ],
     summary:
-      'Enterprise insurance DWH supporting full policy lifecycle — underwriting, claims, renewals — with SCD Type 2 historisation for customer and policy dimensions. Power BI dashboards cut reporting cycle from 2 days to 4 hours.',
-    stack: ['Azure ADF','SQL Server 2022','T-SQL','SSIS','SSAS Tabular','Power BI','Star Schema','SCD 2'],
+      'Designed conceptual, logical, and physical data models for Policy, Claims, Customer, Agent, and Product subject areas in an enterprise insurance DWH. Used ERwin and ER/Studio for model maintenance, DDL review, and SQL Server schema alignment.',
+    stack: ['ERwin','ER/Studio','SQL Server','T-SQL','Star Schema','SCD Type 1/2','Power BI','Source-to-Target Mapping'],
     highlights: [
-      'Designed 60-table star schema from scratch (conceptual → physical)',
-      'Built metadata-driven ADF pipelines with parameterised datasets',
-      'Implemented SCD Type 2 for 6 core dimensions with audit columns',
-      'Query optimisation reduced avg dashboard load from 28s → 4s',
+      'Designed CDM → LDM → PDM for Policy, Claims, Customer, Agent, and Product subject areas',
+      'Implemented SCD Type 1 & 2 patterns with effective-date logic and current-record indicators',
+      'Built T-SQL stored procedures, CTEs, and window functions for Power BI dashboard feeds',
+      'Authored source-to-target mappings, data dictionary, metadata, and data lineage documentation',
+      '35% reporting performance improvement via schema redesign and index optimization',
     ],
   },
   {
     title: 'Retail Data Modelling Framework',
-    org: 'Circana India',
-    period: 'Sep 2024 → Sep 2025',
+    org: 'Circana India Pvt. Ltd.',
+    period: 'Sept 2024 → Sept 2025',
     color: '#a78bfa',
     status: 'COMPLETED',
     statusColor: '#a78bfa',
     metrics: [
       { label: 'Perf Gain', value: '+30%' },
-      { label: 'Markets', value: '14' },
-      { label: 'Records/day', value: '5M+' },
+      { label: 'Subject Areas', value: '5' },
+      { label: 'Domain', value: 'Retail/CPG' },
     ],
     summary:
-      'Retail analytics model spanning 14 markets for sales performance, customer segmentation, and inventory behaviour. Snowflake schema with a shared conformed dimension layer enabling cross-market OLAP analysis.',
-    stack: ['Azure Synapse','ADF','T-SQL','Power BI','Snowflake Schema','Erwin','SSAS','Python'],
+      'Designed logical and physical dimensional models for Sales, Product, Customer, Store, and Time subject areas supporting retail, e-commerce, and CPG analytics. Implemented SCD Type 2 for product hierarchy and customer attribute tracking.',
+    stack: ['Star Schema','Snowflake Schema','SCD Type 2','T-SQL','SQL Server','Power BI','Conformed Dims','Surrogate Keys'],
     highlights: [
-      'Designed conformed dimension layer reused across 14 regional pipelines',
-      'Implemented Kimball Bus Matrix for cross-subject-area querying',
-      'CDC-based incremental loads processing 5M+ daily transactions',
-      'Self-hosted IR setup for on-premise SQL Server integration',
+      'Designed fact and dimension tables for Sales, Product, Customer, Store, and Time subject areas',
+      'Implemented SCD Type 2 with surrogate key strategy and historical change capture',
+      'Built T-SQL transformation queries, stored procedures, and views for Power BI dashboards',
+      'Standardised naming conventions, metadata documentation, and data dictionary across reporting layers',
+      '30% dashboard performance improvement through dimensional modeling and indexing review',
     ],
   },
   {
-    title: 'Telecom OLAP Platform',
-    org: 'TCS',
-    period: 'Jul 2021 → Aug 2024',
+    title: 'SCMT Global Vendor & SLA Reporting',
+    org: 'TCS (Tata Consultancy Services)',
+    period: 'May 2021 → Sept 2024',
     color: '#34d399',
     status: 'COMPLETED',
     statusColor: '#34d399',
     metrics: [
-      { label: 'Subscribers', value: '20M+' },
-      { label: 'Tables', value: '80+' },
-      { label: 'SLA Uptime', value: '99.4%' },
+      { label: 'Duration', value: '3.3 yrs' },
+      { label: 'Domain', value: 'Vendor SLA' },
+      { label: 'Tools', value: 'ERwin' },
     ],
     summary:
-      'Large-scale telecom DWH covering subscriber lifecycle, network KPIs, revenue assurance, and churn prediction data layers. Served as the single source of truth for 7 downstream BI applications.',
-    stack: ['SQL Server 2019','SSIS','SSAS','T-SQL','Power BI','SSRS','Oracle','Erwin','ER Studio'],
+      'Designed dimensional data models for a global vendor, SLA, and tool inventory reporting platform tracking vendor performance, SLA compliance, business metrics, and operational KPIs. Used ERwin for logical and physical model development.',
+    stack: ['ERwin','SQL Server','T-SQL','SSMS','Star Schema','SCD Type 1/2/3','DDL Review','Stored Procedures'],
     highlights: [
-      'Built 80+ table schema supporting 20M+ subscriber records',
-      'Designed SCD Type 1/2/3 strategy for subscriber dimension',
-      'SSIS packages with full error handling, audit tables, and retry logic',
-      'Created SSAS cube enabling sub-second MDX query response',
+      'Designed dimensional models for Vendor, SLA, Tool, Time, and Status reporting subject areas',
+      'Used ERwin to develop logical/physical models, generate DDL scripts, and reverse-engineer legacy schemas',
+      'Created T-SQL stored procedures, views, and UDFs consumed by SQL-based reporting and analytics teams',
+      'Performed data validation, query optimization, indexing analysis, and execution-plan review',
+      'Contributed to Agile sprint delivery, Git version control, Jira tracking, and model review practices',
     ],
   },
   {
-    title: 'ETL Metadata Framework',
-    org: 'TCS (Internal)',
-    period: '2022 → 2023',
+    title: 'Data Modeling Best Practices — STM & Data Dictionary',
+    org: 'TCS / Circana / EY GDS',
+    period: '2021 → Present',
     color: '#fbbf24',
-    status: 'INTERNAL',
+    status: 'ONGOING',
     statusColor: '#fbbf24',
     metrics: [
-      { label: 'Pipeline Reuse', value: '80%' },
-      { label: 'Dev Time', value: '-60%' },
-      { label: 'Tables Driven', value: '200+' },
+      { label: 'Companies', value: '3' },
+      { label: 'Years', value: '5+' },
+      { label: 'Artifacts', value: 'STM · DD' },
     ],
     summary:
-      'Generic metadata-driven ETL framework eliminating hard-coded SSIS packages. Configuration tables drive source/target mappings, transformations, SCD type selection, and scheduling — a single pipeline template covers 200+ table loads.',
-    stack: ['SSIS','T-SQL','SQL Server','ADF','Metadata Tables','Generic Framework','Stored Procedures'],
+      'Cross-company practice of authoring source-to-target mappings, data lineage documentation, metadata management, and data dictionary standards — ensuring consistency, governance, and audit-readiness across all data warehouse projects.',
+    stack: ['Source-to-Target Mapping','Data Dictionary','Metadata Management','Data Lineage','Data Governance','Naming Standards','Data Quality','Jira'],
     highlights: [
-      'Single parameterised SSIS master package replaces 200+ bespoke packages',
-      'Metadata config tables drive all source-to-target mapping logic',
-      'SCD type (1/2/3) selection driven entirely from configuration',
-      '60% reduction in development time for new table onboarding',
+      'Authored STM documents collaborating with business analysts, data engineers, and BI developers',
+      'Maintained data dictionary and metadata standards across all three employers',
+      'Defined naming conventions and model review practices for reporting layer consistency',
+      'Supported data quality and data profiling initiatives across Insurance, Retail/CPG, and Vendor domains',
     ],
   },
 ];
@@ -109,14 +113,14 @@ function ProjectCard({ project, visible, delay }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <article
-      className="glass rounded-2xl overflow-hidden group hover:border-white/20 transition-all duration-500"
-      style={{
-        borderColor: `${project.color}20`,
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms, border-color 0.3s`,
-      }}
+    <motion.article
+      className="glass rounded-2xl overflow-hidden group"
+      style={{ borderColor: `${project.color}20` }}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.55, delay: delay / 1000 }}
+      whileHover={{ y: -4, borderColor: `${project.color}40` }}
     >
       {/* Top accent bar */}
       <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${project.color}, transparent)` }} />
@@ -196,7 +200,7 @@ function ProjectCard({ project, visible, delay }) {
           ))}
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -208,7 +212,13 @@ export default function ProjectsSection() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <header className="mb-12">
+        <motion.header
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="font-mono text-xs text-slate-500 flex items-center gap-2 mb-2">
             <span className="text-cyan-300">[03]</span>
             <span>DATA_PIPELINES</span>
@@ -216,10 +226,10 @@ export default function ProjectsSection() {
           <h2 className="font-display text-3xl md:text-5xl">Projects</h2>
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-violet-400/60 to-transparent" />
           <p className="mt-4 text-slate-400 text-sm max-w-2xl">
-            Enterprise data warehouse projects spanning insurance, retail, and telecom — delivering
-            optimised dimensional models, ADF pipelines, and OLAP-ready layers.
+            Enterprise data warehouse projects spanning insurance, retail/CPG, and vendor SLA domains — delivering
+            optimised dimensional models, T-SQL workloads, and OLAP-ready physical schemas.
           </p>
-        </header>
+        </motion.header>
 
         <div className="grid md:grid-cols-2 gap-6">
           {PROJECTS.map((p, i) => (

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 function useReveal() {
   const ref = useRef(null);
@@ -19,37 +20,37 @@ const STRENGTHS = [
     icon: '🏗',
     color: '#22d3ee',
     title: 'Dimensional Modeling',
-    desc: 'Design conceptual → logical → physical models. Star & Snowflake schemas, Data Vault 2.0, Kimball & Inmon methodologies.',
+    desc: 'Design conceptual → logical → physical models. Star & Snowflake schemas, Kimball methodology, grain definition, conformed dimensions, surrogate & natural keys.',
   },
   {
-    icon: '⚡',
+    icon: '🛠',
     color: '#34d399',
-    title: 'Azure Data Factory',
-    desc: 'Metadata-driven pipelines, parameterized datasets, linked services, triggers, monitoring & self-hosted IRs on Azure.',
+    title: 'ERwin & ER/Studio',
+    desc: 'Enterprise modeling using ERwin Data Modeler and ER/Studio — forward engineering, reverse engineering, DDL review, SQL Server schema alignment, and model documentation.',
   },
   {
     icon: '🗄',
     color: '#a78bfa',
     title: 'SQL Development',
-    desc: 'T-SQL & PL/SQL mastery — window functions, CTEs, stored procedures, query tuning, execution plans, index strategies.',
+    desc: 'T-SQL mastery — window functions, CTEs, stored procedures, views, UDFs, query tuning, execution plan analysis, and index optimization for high-performance reporting.',
   },
   {
     icon: '📐',
     color: '#f472b6',
-    title: 'Data Architecture',
-    desc: 'Enterprise DWH design, OLAP cube structuring, SSAS tabular models, aggregation strategies, slowly changing dimensions.',
+    title: 'Data Warehouse Design',
+    desc: 'Enterprise DWH across Insurance, Retail/CPG, and Vendor SLA domains. SCD Type 1, 2 & 3 implementation, fact & dimension design, OLAP-ready physical schemas.',
   },
   {
     icon: '🔄',
     color: '#fbbf24',
-    title: 'ETL / ELT Engineering',
-    desc: 'SSIS package development, incremental loads, delta capture, error handling, audit logging & pipeline orchestration.',
+    title: 'Source-to-Target Mapping',
+    desc: 'End-to-end STM documentation, data lineage, metadata management, data dictionary authoring, data quality standards — partnering with BAs and data engineers.',
   },
   {
     icon: '📊',
     color: '#06d6a0',
     title: 'BI & Reporting',
-    desc: 'Power BI semantic layers, DAX measures, KPI dashboards, drill-through reports wired directly to optimised OLAP layers.',
+    desc: 'Power BI dashboard optimization and KPI reporting. Dimensional schema tuning that directly feeds analytics layers — achieving 30–35% performance gains across projects.',
   },
 ];
 
@@ -66,21 +67,27 @@ export default function AboutSection() {
     <section
       id="about"
       ref={secRef}
-      className={`relative py-24 px-4 md:px-8 transition-all duration-700 ${secVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      className="relative py-24 px-4 md:px-8"
     >
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <header className="mb-12">
+        <motion.header
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="font-mono text-xs text-slate-500 flex items-center gap-2 mb-2">
             <span className="text-cyan-300">[01]</span>
             <span>SOURCE_NODE</span>
           </div>
           <h2 className="font-display text-3xl md:text-5xl">About Me</h2>
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-cyan-400/60 to-transparent" />
-        </header>
+        </motion.header>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8 relative z-10">
 
           {/* ── Bio ─────────────────────────────── */}
           <div className="lg:col-span-3 space-y-6">
@@ -108,17 +115,18 @@ export default function AboutSection() {
                 BI teams to ensure the data layer directly drives dashboard performance and analytical agility.
               </p>
               <p className="text-slate-400 leading-relaxed text-sm">
-                On the engineering side, I build <span className="text-slate-200">metadata-driven ADF pipelines</span>,
-                implement <span className="text-slate-200">SCD Type 2</span> historisation strategies, optimise
-                T-SQL workloads with execution-plan analysis, and architect SSAS tabular models for
-                high-performance OLAP queries — reducing average dashboard load time by 30–38%.
+                I use <span className="text-slate-200">ERwin & ER/Studio</span> for model maintenance,
+                implement <span className="text-slate-200">SCD Type 1, 2 & 3</span> historisation strategies,
+                optimise T-SQL workloads with execution-plan analysis, and author
+                <span className="text-slate-200"> source-to-target mappings</span> and data dictionaries —
+                delivering 30–35% reporting performance improvements.
               </p>
             </div>
 
             {/* Location / availability */}
             <div className="glass rounded-xl px-5 py-4 flex flex-wrap gap-6 text-sm">
               {[
-                { icon: '📍', label: 'Location', value: 'Bengaluru, India' },
+                { icon: '📍', label: 'Location', value: 'Bengaluru · 30-day notice' },
                 { icon: '🏢', label: 'Current', value: 'EY GDS' },
                 { icon: '✅', label: 'Status', value: 'Open to opportunities', color: '#34d399' },
               ].map((item) => (
@@ -159,7 +167,7 @@ export default function AboutSection() {
                   ['Domains', 'Insurance · Retail/CPG · Vendor SLA'],
                   ['Tools', 'ERwin · ER/Studio · SSMS · Power BI · Git'],
                   ['Databases', 'SQL Server · Snowflake · Azure Synapse'],
-                  ['Languages', 'T-SQL · SQL · Python · English · Odia'],
+                  ['Languages', 'English · Hindi · Odia'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-2">
                     <span className="font-mono text-[11px] text-slate-500">{k}</span>
@@ -176,25 +184,29 @@ export default function AboutSection() {
           <div className="font-mono text-xs text-slate-500 uppercase tracking-wider mb-6">Core Competencies</div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {STRENGTHS.map((s, i) => (
-              <div
+              <motion.div
                 key={s.title}
-                className="glass rounded-xl p-5 hover:border-white/20 transition-all duration-300 group"
-                style={{
-                  borderColor: `${s.color}20`,
-                  transitionDelay: `${i * 60}ms`,
-                  opacity: secVisible ? 1 : 0,
-                  transform: secVisible ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `opacity 0.5s ease ${i * 80}ms, transform 0.5s ease ${i * 80}ms, border-color 0.3s`
-                }}
+                className="glass rounded-xl p-5 hover:border-white/20 group cursor-default"
+                style={{ borderColor: `${s.color}20` }}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.07 }}
+                whileHover={{ y: -4, borderColor: `${s.color}40` }}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="text-2xl">{s.icon}</div>
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                    style={{ background: `${s.color}12`, border: `1px solid ${s.color}25` }}
+                  >
+                    {s.icon}
+                  </div>
                   <h3 className="font-display font-semibold text-sm text-slate-100">{s.title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
                 <div className="mt-3 h-px w-0 group-hover:w-full transition-all duration-500"
                      style={{ background:`linear-gradient(90deg, ${s.color}60, transparent)` }} />
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

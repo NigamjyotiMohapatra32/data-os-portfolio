@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { db } from '../lib/firebase';
+import { doc, getDoc, updateDoc, increment, setDoc } from 'firebase/firestore';
 
 const ROLES = [
   'Dimensional Data Modeller',
   'SQL Developer',
-  'Azure Data Factory Expert',
-  'Data Architect',
-  'OLAP Engineer',
+  'ERwin & ER/Studio Expert',
+  'Data Warehouse Specialist',
+  'Kimball Framework Expert',
 ];
 
 function useTypewriter(items, typeSpeed = 70, deleteSpeed = 40, pause = 1800) {
@@ -61,8 +64,8 @@ function useCountUp(target, duration = 1800, start = false) {
 const STATS = [
   { label: 'Years Experience', value: 5, suffix: 'y', color: '#22d3ee', decimal: false },
   { label: 'Data Models Built', value: 30, suffix: '+', color: '#34d399' },
-  { label: 'Pipeline Jobs OK', value: 99, suffix: '.4%', color: '#a78bfa' },
-  { label: 'Perf Improvement', value: 38, suffix: '%', color: '#f472b6' },
+  { label: 'Companies Served', value: 3, suffix: '', color: '#a78bfa' },
+  { label: 'Perf Improvement', value: 35, suffix: '%', color: '#f472b6' },
 ];
 
 function StatCard({ stat, animate }) {
@@ -78,10 +81,25 @@ function StatCard({ stat, animate }) {
   );
 }
 
+const RESUME_URL = import.meta.env.VITE_RESUME_URL || null;
+const RESUME_COUNTER_DOC = 'meta/resumeDownloads';
+
+function useResumeDownloadCount() {
+  const [count, setCount] = useState(null);
+  useEffect(() => {
+    getDoc(doc(db, 'meta', 'resumeDownloads'))
+      .then((snap) => { if (snap.exists()) setCount(snap.data().count ?? 0); else setCount(0); })
+      .catch(() => setCount(null));
+  }, []);
+  return count;
+}
+
 export default function HeroSection({ onLaunchDataOS }) {
   const role = useTypewriter(ROLES);
   const [statsVisible, setStatsVisible] = useState(false);
   const statsRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+  const downloadCount = useResumeDownloadCount();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -91,6 +109,31 @@ export default function HeroSection({ onLaunchDataOS }) {
     if (statsRef.current) observer.observe(statsRef.current);
     return () => observer.disconnect();
   }, []);
+
+  const handleResumeDownload = useCallback(async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      // Increment download counter in Firestore
+      const ref = doc(db, 'meta', 'resumeDownloads');
+      await setDoc(ref, { count: increment(1) }, { merge: true });
+    } catch {
+      // Non-fatal
+    }
+    const url = RESUME_URL || '#contact';
+    if (url && url !== '#contact') {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Nigamjyoti_Mohapatra_Resume.pdf';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.location.href = '#contact';
+    }
+    setTimeout(() => setDownloading(false), 2000);
+  }, [downloading]);
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center pt-20 pb-16 px-4 md:px-8">
@@ -133,31 +176,78 @@ export default function HeroSection({ onLaunchDataOS }) {
 
           {/* Bio */}
           <p className="mt-5 text-sm md:text-base text-slate-400 max-w-xl leading-relaxed">
-            Transforming raw data into enterprise-grade intelligence. I design
-            <span className="text-slate-200"> star &amp; snowflake schemas</span>, build
-            metadata-driven <span className="text-slate-200">ADF pipelines</span>, implement
-            <span className="text-slate-200"> SCD 1/2/3</span> strategies, and ship
-            <span className="text-slate-200"> OLAP-ready</span> layers that move Power BI
-            dashboards 30–38% faster.
+            Translating complex business requirements into clean, scalable
+            <span className="text-slate-200"> dimensional models</span> — from conceptual ERDs
+            through production-grade physical schemas. I design
+            <span className="text-slate-200"> star &amp; snowflake schemas</span>, implement
+            <span className="text-slate-200"> SCD Type 1/2/3</span> strategies, and optimise
+            <span className="text-slate-200"> T-SQL workloads</span> that move Power BI
+            dashboards up to 35% faster.
           </p>
 
           {/* CTA buttons */}
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#projects" className="btn btn-cyan">▶ explore_pipelines()</a>
-            <a href="#contact"  className="btn btn-lime">↗ open_connection()</a>
-            <button
+            <motion.a
+              href="#projects"
+              className="btn btn-cyan"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              ▶ explore_pipelines()
+            </motion.a>
+            <motion.a
+              href="#contact"
+              className="btn btn-lime"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              ↗ open_connection()
+            </motion.a>
+            <motion.button
+              onClick={handleResumeDownload}
+              disabled={downloading}
+              className="btn btn-violet"
+              title={RESUME_URL ? 'Download Resume PDF' : 'Resume coming soon — contact me'}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              style={{ position: 'relative', overflow: 'hidden' }}
+            >
+              {downloading ? (
+                <>
+                  <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Downloading…
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  Download Resume
+                  {downloadCount !== null && downloadCount > 0 && (
+                    <span className="text-[10px] font-mono opacity-60 ml-1">({downloadCount})</span>
+                  )}
+                </>
+              )}
+            </motion.button>
+            <motion.button
               onClick={onLaunchDataOS}
-              className="btn btn-violet hover:shadow-lg transition"
+              className="btn"
+              style={{ color: '#fbbf24', borderColor: 'rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.06)' }}
               title="Launch interactive Data OS workspace"
+              whileHover={{ scale: 1.04, boxShadow: '0 0 22px -6px rgba(251,191,36,0.7)' }}
+              whileTap={{ scale: 0.97 }}
             >
               ⚡ Launch Data OS
-            </button>
+            </motion.button>
           </div>
 
           {/* Skill chips */}
           <div className="mt-8 flex flex-wrap gap-2 max-w-2xl">
-            {['Star Schema','Snowflake Schema','SCD 1/2/3','T-SQL','Azure Data Factory',
-              'SSIS','Power BI','Erwin','ER Studio','SSAS','Data Vault','Kimball'].map((s, i) => (
+            {['Star Schema','Snowflake Schema','SCD Type 1/2/3','T-SQL','ERwin','ER/Studio',
+              'Power BI','SQL Server','Kimball','Conformed Dimensions','Source-to-Target Mapping','Data Dictionary'].map((s, i) => (
               <span key={i} className={`chip ${['chip-cyan','chip-lime','chip-violet','chip-rose'][i % 4]}`}>{s}</span>
             ))}
           </div>
@@ -303,7 +393,7 @@ export default function HeroSection({ onLaunchDataOS }) {
 
           {/* Tech badge strip */}
           <div className="mt-3 flex flex-wrap gap-2 justify-center">
-            {['Azure ADF','SSIS','T-SQL','Star Schema','Kimball','SSAS','Power BI'].map((t, i) => (
+            {['ERwin','ER/Studio','T-SQL','Star Schema','Kimball','SQL Server','Power BI'].map((t, i) => (
               <span key={i} style={{
                 fontSize:'10px', fontFamily:"'JetBrains Mono',monospace",
                 padding:'3px 8px', borderRadius:'4px',

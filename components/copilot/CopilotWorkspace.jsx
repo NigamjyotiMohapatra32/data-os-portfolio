@@ -162,7 +162,7 @@ export default function CopilotWorkspace({ embedded = false }) {
   }, [commandOpen, setCommandOpen]);
 
   const profileBadges = useMemo(
-    () => ['Data Modeler', 'Data Architect', 'Azure Data Engineer', 'Target: 17-20 LPA', 'Location: India'],
+    () => ['Data Modeler', 'SQL Developer', 'ERwin & ER/Studio Expert', 'Target: 17-20 LPA', 'Location: Bengaluru · PAN India'],
     [],
   );
 

@@ -6,10 +6,12 @@ import SkillsSection from '../components/SkillsSection';
 import ProjectsSection from '../components/ProjectsSection';
 import TimelineSection from '../components/TimelineSection';
 import SQLPlayground from '../components/SQLPlayground';
+import ResumeSection from '../components/ResumeSection';
 import ContactSection from '../components/ContactSection';
 import Navigation from '../components/Navigation';
 import BootScreen from '../components/BootScreen';
 import BackgroundCanvas from '../components/BackgroundCanvas';
+import CursorGlow from '../components/CursorGlow';
 
 export default function Portfolio() {
   const [showBoot, setShowBoot] = useState(true);
@@ -42,17 +44,47 @@ export default function Portfolio() {
     <div className={`min-h-screen ${theme === 'cyber' ? 'cyber' : ''}`} style={{ '--bg': '#06080f' }}>
       {showBoot && <BootScreen onSkip={handleSkipBoot} />}
       <BackgroundCanvas />
+      <CursorGlow />
       <Navigation theme={theme} onThemeToggle={toggleTheme} />
+
+      {/* Premium scanning line effect */}
+      <div className="scan-line" aria-hidden="true" />
 
       <main className="relative z-10">
         <HeroSection onLaunchDataOS={launchDataOS} />
+        <div className="section-divider" />
         <AboutSection />
+        <div className="section-divider" />
         <SkillsSection />
+        <div className="section-divider" />
         <ProjectsSection />
+        <div className="section-divider" />
         <TimelineSection />
+        <div className="section-divider" />
+        <ResumeSection />
+        <div className="section-divider" />
         <SQLPlayground />
+        <div className="section-divider" />
         <ContactSection />
       </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 py-8 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="font-mono text-xs text-slate-600">
+            <span className="text-slate-500">node://</span>
+            <span className="text-cyan-300/70">nigamjyoti</span>
+            <span className="text-slate-600"> / data-modeler · Bengaluru, India</span>
+          </div>
+          <div className="flex items-center gap-4 font-mono text-xs text-slate-600">
+            <a href="mailto:nigamjob32@gmail.com" className="hover:text-cyan-400 transition">nigamjob32@gmail.com</a>
+            <span className="text-slate-700">·</span>
+            <a href="https://in.linkedin.com/in/nigamjyoti" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition">LinkedIn</a>
+            <span className="text-slate-700">·</span>
+            <button onClick={launchDataOS} className="hover:text-violet-400 transition">Data OS ⚡</button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

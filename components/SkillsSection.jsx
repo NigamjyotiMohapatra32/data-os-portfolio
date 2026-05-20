@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 function useReveal(threshold = 0.15) {
   const ref = useRef(null);
@@ -23,48 +24,48 @@ const SKILL_GROUPS = [
       { name: 'Dimensional Modeling (Kimball)', pct: 95 },
       { name: 'Star & Snowflake Schema', pct: 95 },
       { name: 'SCD Types 1 / 2 / 3', pct: 92 },
-      { name: 'Data Vault 2.0', pct: 78 },
-      { name: 'Erwin / ER Studio', pct: 88 },
-      { name: 'Normalization / Denormalization', pct: 93 },
+      { name: 'Normalization / 3NF / Denormalization', pct: 93 },
+      { name: 'Grain Definition & Conformed Dims', pct: 90 },
+      { name: 'Fact & Dimension Table Design', pct: 94 },
+    ],
+  },
+  {
+    title: 'ERwin & ER/Studio',
+    color: '#34d399',
+    icon: '🛠',
+    skills: [
+      { name: 'ERwin Data Modeler', pct: 88 },
+      { name: 'ER/Studio', pct: 85 },
+      { name: 'Forward & Reverse Engineering', pct: 87 },
+      { name: 'DDL Review & Schema Alignment', pct: 88 },
+      { name: 'Source-to-Target Mapping (STM)', pct: 90 },
+      { name: 'Data Dictionary & Metadata Mgmt', pct: 89 },
     ],
   },
   {
     title: 'SQL Development',
-    color: '#34d399',
+    color: '#a78bfa',
     icon: '🗄',
     skills: [
       { name: 'T-SQL (Advanced)', pct: 96 },
       { name: 'Window Functions & CTEs', pct: 94 },
-      { name: 'Stored Procedures & Triggers', pct: 90 },
+      { name: 'Stored Procedures & Views & UDFs', pct: 90 },
       { name: 'Query Tuning & Execution Plans', pct: 88 },
-      { name: 'PL/SQL', pct: 75 },
-      { name: 'Dynamic SQL', pct: 85 },
+      { name: 'Indexing & Performance Tuning', pct: 87 },
+      { name: 'Dynamic SQL & DDL Scripting', pct: 85 },
     ],
   },
   {
-    title: 'Azure & Cloud',
-    color: '#a78bfa',
-    icon: '☁️',
-    skills: [
-      { name: 'Azure Data Factory (ADF)', pct: 92 },
-      { name: 'Azure Synapse Analytics', pct: 80 },
-      { name: 'Azure Blob / ADLS Gen2', pct: 85 },
-      { name: 'Azure SQL Database', pct: 88 },
-      { name: 'Azure DevOps (CI/CD)', pct: 72 },
-      { name: 'Self-Hosted Integration Runtime', pct: 82 },
-    ],
-  },
-  {
-    title: 'ETL / ELT Engineering',
+    title: 'Data Governance & Documentation',
     color: '#fbbf24',
-    icon: '🔄',
+    icon: '📋',
     skills: [
-      { name: 'SSIS (SQL Server Integration Services)', pct: 90 },
-      { name: 'Metadata-Driven Pipelines', pct: 93 },
-      { name: 'Incremental / Delta Loads', pct: 91 },
-      { name: 'Error Handling & Audit Logging', pct: 87 },
-      { name: 'CDC (Change Data Capture)', pct: 80 },
-      { name: 'SSAS Tabular Models', pct: 78 },
+      { name: 'Data Lineage & Traceability', pct: 88 },
+      { name: 'Naming Standards & Conventions', pct: 90 },
+      { name: 'Data Quality & Data Profiling', pct: 82 },
+      { name: 'Model Review & Stakeholder Collab', pct: 87 },
+      { name: 'Agile / Jira / Sprint Delivery', pct: 80 },
+      { name: 'Git Version Control', pct: 76 },
     ],
   },
   {
@@ -72,25 +73,24 @@ const SKILL_GROUPS = [
     color: '#f472b6',
     icon: '📊',
     skills: [
-      { name: 'Power BI (Desktop + Service)', pct: 90 },
-      { name: 'DAX Measures & Calculated Columns', pct: 85 },
-      { name: 'Power Query / M Language', pct: 80 },
-      { name: 'SSRS Reports', pct: 75 },
-      { name: 'KPI Dashboards', pct: 88 },
-      { name: 'DirectQuery & Import Mode', pct: 84 },
+      { name: 'Power BI (Desktop + Service)', pct: 85 },
+      { name: 'KPI Dashboards & Reporting', pct: 85 },
+      { name: 'OLAP-Ready Layer Design', pct: 88 },
+      { name: 'Advanced Excel (Pivot / VLOOKUP)', pct: 82 },
+      { name: 'Reporting Performance Optimization', pct: 87 },
     ],
   },
   {
-    title: 'Databases & Tools',
+    title: 'Databases & Cloud Familiarity',
     color: '#06d6a0',
-    icon: '🛠',
+    icon: '☁️',
     skills: [
       { name: 'SQL Server (2016–2022)', pct: 94 },
-      { name: 'Oracle DB', pct: 72 },
-      { name: 'Azure Synapse / Dedicated Pool', pct: 78 },
-      { name: 'SSMS / Azure Data Studio', pct: 95 },
-      { name: 'Git / Azure DevOps', pct: 76 },
-      { name: 'Python (Pandas / PySpark basics)', pct: 60 },
+      { name: 'SSMS / SQL Server Management Studio', pct: 95 },
+      { name: 'Snowflake (Familiarity)', pct: 60 },
+      { name: 'Azure Synapse (Familiarity)', pct: 58 },
+      { name: 'Azure Data Factory (Familiarity)', pct: 62 },
+      { name: 'Databricks / Data Lake (Awareness)', pct: 50 },
     ],
   },
 ];
@@ -168,9 +168,10 @@ function SkillGroupCard({ group, visible, groupDelay }) {
 }
 
 const TOOLS = [
-  'SQL Server','Azure Data Factory','SSIS','SSAS','Power BI','Erwin','ER Studio',
-  'Azure Synapse','T-SQL','PL/SQL','SSMS','Azure DevOps','Git','Kimball','Data Vault',
-  'Star Schema','SCD Type 2','CDC','ADLS Gen2','Azure SQL','Power Query','DAX',
+  'ERwin Data Modeler','ER/Studio','SQL Server','SSMS','T-SQL','Star Schema','Snowflake Schema',
+  'SCD Type 1/2/3','Conformed Dimensions','Surrogate Keys','Source-to-Target Mapping',
+  'Data Dictionary','Data Lineage','Power BI','Kimball Methodology','Git','Jira',
+  'Advanced Excel','Pivot Tables','VLOOKUP','Power Query',
 ];
 
 export default function SkillsSection() {
@@ -181,24 +182,37 @@ export default function SkillsSection() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <header className="mb-12">
+        <motion.header
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="font-mono text-xs text-slate-500 flex items-center gap-2 mb-2">
             <span className="text-cyan-300">[02]</span>
             <span>PROCESSING_LAYER</span>
           </div>
           <h2 className="font-display text-3xl md:text-5xl">Skills &amp; Expertise</h2>
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-emerald-400/60 to-transparent" />
-        </header>
+        </motion.header>
 
         {/* Skill cards grid */}
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
           {SKILL_GROUPS.map((group, i) => (
-            <SkillGroupCard
+            <motion.div
               key={group.title}
-              group={group}
-              visible={visible}
-              groupDelay={i * 100}
-            />
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: i * 0.08 }}
+            >
+              <SkillGroupCard
+                group={group}
+                visible={visible}
+                groupDelay={i * 100}
+              />
+            </motion.div>
           ))}
         </div>
 

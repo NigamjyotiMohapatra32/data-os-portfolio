@@ -1,14 +1,15 @@
 import React from 'react';
 
 const navItems = [
-  { id: 'diagram', label: 'ER Diagram', icon: '◻', color: '#22d3ee' },
-  { id: 'sql', label: 'SQL Editor', icon: '{}', color: '#34d399' },
-  { id: 'tasks', label: 'Tasks', icon: '✓', color: '#fbbf24' },
-  { id: 'notes', label: 'Notes', icon: '📝', color: '#a78bfa' },
-  { id: 'history', label: 'History', icon: '⏱', color: '#f472b6' },
-  { id: 'snippets', label: 'Snippets', icon: '📌', color: '#06d6a0' },
-  { id: 'dashboard', label: 'Dashboard',  icon: '📊', color: '#ff006e' },
-  { id: 'jobs',      label: 'Job Hunter', icon: '🔍', color: '#60a5fa' },
+  { id: 'diagram',   label: 'ER Diagram',   icon: '◻',  color: '#22d3ee' },
+  { id: 'sql',       label: 'SQL Editor',   icon: '{}', color: '#34d399' },
+  { id: 'tasks',     label: 'Tasks',        icon: '✓',  color: '#fbbf24' },
+  { id: 'notes',     label: 'Notes',        icon: '📝', color: '#a78bfa' },
+  { id: 'history',   label: 'History',      icon: '⏱', color: '#f472b6' },
+  { id: 'snippets',  label: 'Snippets',     icon: '📌', color: '#06d6a0' },
+  { id: 'dashboard', label: 'Dashboard',    icon: '📊', color: '#ff006e' },
+  { id: 'jobs',      label: 'Job Hunter',   icon: '🔍', color: '#60a5fa' },
+  { id: 'admin',     label: 'Admin Panel',  icon: '🔐', color: '#fbbf24' },
 ];
 
 export default function EnhancedSidebar({ activePanel, setActivePanel, onExit, onShowShortcuts }) {

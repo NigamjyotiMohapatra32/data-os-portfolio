@@ -18,6 +18,7 @@ import './EnhancedWorkspace.css';
 
 const PerformanceDashboard = lazy(() => import('./PerformanceDashboard'));
 const CopilotWorkspace = lazy(() => import('../copilot/CopilotWorkspace'));
+const AdminPanel = lazy(() => import('../AdminPanel'));
 
 // Panel-level error boundary
 class PanelErrorBoundary extends React.Component {
@@ -223,6 +224,7 @@ export default function EnhancedWorkspace() {
                 {activePanel === 'snippets'  && <SavedSnippets />}
                 {activePanel === 'jobs'      && <CopilotWorkspace embedded />}
                 {activePanel === 'dashboard' && <PerformanceDashboard />}
+                {activePanel === 'admin'    && <AdminPanel />}
               </Suspense>
             </PanelErrorBoundary>
           </div>

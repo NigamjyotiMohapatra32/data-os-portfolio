@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 function useReveal(threshold = 0.1) {
   const ref = useRef(null);
@@ -46,24 +47,24 @@ const TIMELINE = [
     detail: 'Designed dimensional data models for a global vendor, SLA, and tool inventory reporting platform. Used ERwin for logical/physical models, DDL scripts, and reverse engineering of legacy SQL Server schemas. Built T-SQL stored procedures, views, and UDFs for analytics.',
   },
   {
-    period: 'Sep 2024 — Sep 2025',
+    period: 'Sept 2024 — Sept 2025',
     color: '#a78bfa',
     dot: '🚀',
-    title: 'Azure Data Engineer / Data Modeler',
-    org: 'Circana India',
+    title: 'Data Modeler / SQL Developer',
+    org: 'Circana India Pvt. Ltd.',
     type: 'Work · 1 yr',
-    tags: ['Azure ADF','Synapse','Snowflake Schema','Conformed Dims','Python','Power BI'],
-    detail: 'Designed retail analytics model for 14+ markets. Built ADF pipelines with CDC-based incremental loads, conformed dimension layers, and cross-market OLAP cubes. 30% performance improvement.',
+    tags: ['Retail Analytics','Star Schema','Snowflake Schema','SCD Type 2','Conformed Dims','T-SQL','Power BI'],
+    detail: 'Designed logical and physical dimensional models for Sales, Product, Customer, Store, and Time subject areas supporting retail and CPG analytics. Implemented SCD Type 2 for product hierarchy and customer attribute tracking. Built T-SQL stored procedures and views for Power BI dashboards. 30% performance improvement through dimensional modeling and index optimization.',
   },
   {
     period: 'Oct 2025 — Present',
     color: '#f472b6',
     dot: '⭐',
-    title: 'Senior Data Modeler / Data Architect',
-    org: 'EY GDS (Ernst & Young)',
+    title: 'Data Modeler / SQL Developer',
+    org: 'EY GDS (Ernst & Young Global Delivery Services)',
     type: 'Work · Current',
-    tags: ['Insurance DWH','Azure ADF','Star Schema','SCD 2','SSAS Tabular','Power BI','Data Architecture'],
-    detail: 'Architecting enterprise insurance data warehouse from scratch. Leading dimensional modelling, ADF pipeline design, SCD implementations, and OLAP layer for Power BI dashboards. 35% performance gain achieved.',
+    tags: ['Insurance DWH','ERwin','ER/Studio','Star Schema','SCD Type 1/2','T-SQL','Power BI','Source-to-Target Mapping'],
+    detail: 'Designed conceptual, logical, and physical data models for Policy, Claims, Customer, Agent, and Product subject areas in an enterprise insurance data warehouse. Used ERwin and ER/Studio for model maintenance, forward/reverse engineering, and DDL review. Developed T-SQL stored procedures, CTEs, window functions, and views for Power BI dashboards. 35% reporting performance improvement.',
   },
 ];
 
@@ -71,13 +72,12 @@ function TimelineItem({ item, idx, visible }) {
   const isRight = idx % 2 === 0;
 
   return (
-    <div
+    <motion.div
       className="relative grid md:grid-cols-2 gap-4 md:gap-8"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-        transition: `opacity 0.6s ease ${idx * 150}ms, transform 0.6s ease ${idx * 150}ms`,
-      }}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: idx * 0.12 }}
     >
       {/* Timeline dot (centered on desktop) */}
       <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-6 z-10 flex-col items-center">
@@ -152,7 +152,7 @@ function TimelineItem({ item, idx, visible }) {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -211,7 +211,7 @@ export default function TimelineSection() {
             <div>
               <div className="font-display font-semibold text-slate-100">Currently at EY GDS · Open to connect</div>
               <div className="font-mono text-xs text-slate-400 mt-0.5">
-                Senior Data Modeler / Architect · Bengaluru, India
+                Data Modeler / SQL Developer · Bengaluru, India
               </div>
             </div>
           </div>
