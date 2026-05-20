@@ -173,7 +173,7 @@ export default function ContactSection() {
           transition={{ duration: 0.6 }}
         >
           <div className="font-mono text-xs text-slate-500 flex items-center gap-2 mb-2">
-            <span className="text-cyan-300">[06]</span>
+            <span className="text-cyan-300">[07]</span>
             <span>CONTACT</span>
           </div>
           <h2 className="font-display text-3xl md:text-5xl">Get in Touch</h2>
@@ -196,11 +196,13 @@ export default function ContactSection() {
             {CONTACTS.map((c, i) => (
               <motion.div
                 key={c.label}
-                className="glass rounded-xl p-4 flex items-center gap-4 hover:border-white/20 transition-all duration-300 group"
+                className="glass rounded-xl p-4 flex items-center gap-4 group relative overflow-hidden"
                 style={{ borderColor: `${c.color}20` }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                whileHover={{ scale: 1.02, y: -3, borderColor: `${c.color}50`, boxShadow: `0 12px 32px -8px ${c.color}25` }}
+                transition={{ type: 'spring', stiffness: 400, damping: 22 }}
               >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse at left, ${c.color}08, transparent 60%)` }} />
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: `${c.color}15`, color: c.color, border: `1px solid ${c.color}30` }}

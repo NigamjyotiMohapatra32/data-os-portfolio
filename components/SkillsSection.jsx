@@ -119,17 +119,19 @@ function SkillBar({ name, pct, color, animate, delay = 0 }) {
 
 function SkillGroupCard({ group, visible, groupDelay }) {
   return (
-    <div
-      className="glass rounded-2xl p-5"
-      style={{
-        borderColor: `${group.color}20`,
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.6s ease ${groupDelay}ms, transform 0.6s ease ${groupDelay}ms`,
-      }}
+    <motion.div
+      className="glass rounded-2xl p-5 group relative overflow-hidden"
+      style={{ borderColor: `${group.color}20` }}
+      whileHover={{ y: -6, borderColor: `${group.color}50`, boxShadow: `0 20px 40px -12px ${group.color}30` }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
+      {/* subtle inner glow on hover */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
+        style={{ background: `radial-gradient(ellipse at top, ${group.color}08, transparent 60%)` }}
+      />
       {/* Card header */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/5">
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/5 relative z-10">
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
           style={{ background: `${group.color}15`, border: `1px solid ${group.color}30` }}
@@ -151,7 +153,7 @@ function SkillGroupCard({ group, visible, groupDelay }) {
       </div>
 
       {/* Skill bars */}
-      <div className="space-y-3">
+      <div className="space-y-3 relative z-10">
         {group.skills.map((s, i) => (
           <SkillBar
             key={s.name}
@@ -163,7 +165,7 @@ function SkillGroupCard({ group, visible, groupDelay }) {
           />
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

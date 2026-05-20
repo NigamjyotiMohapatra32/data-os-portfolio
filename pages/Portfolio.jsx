@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 import AboutSection from '../components/AboutSection';
@@ -18,12 +18,25 @@ export default function Portfolio() {
   const [theme, setTheme] = useState('default');
   const navigate = useNavigate();
 
+  const bootTimerStarted = useRef(false);
   useEffect(() => {
-    const timer = setTimeout(() => setShowBoot(false), 3500);
-    return () => clearTimeout(timer);
+    // Ref survives StrictMode double-invoke. Only the FIRST effect pass sets the timer.
+    // No cleanup returned intentionally — if we cancel, StrictMode's cleanup kills it
+    // and the ref-guard prevents a replacement timer from starting (deadlock).
+    if (bootTimerStarted.current) return;
+    bootTimerStarted.current = true;
+    setTimeout(() => {
+      setShowBoot(false);
+      window.__portfolioBootDone = true;
+      window.dispatchEvent(new CustomEvent('portfolioBootDone'));
+    }, 3500);
   }, []);
 
-  const handleSkipBoot = () => setShowBoot(false);
+  const handleSkipBoot = () => {
+    setShowBoot(false);
+    window.__portfolioBootDone = true;
+    window.dispatchEvent(new CustomEvent('portfolioBootDone'));
+  };
 
   const toggleTheme = () => {
     setTheme((t) => (t === 'default' ? 'cyber' : 'default'));

@@ -191,7 +191,7 @@ export default function TimelineSection() {
 
           <div className="space-y-10 md:space-y-14">
             {TIMELINE.map((item, i) => (
-              <TimelineItem key={item.title} item={item} idx={i} visible={visible} />
+              <TimelineItem key={`${item.org}-${item.period}`} item={item} idx={i} visible={visible} />
             ))}
           </div>
         </div>

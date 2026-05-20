@@ -6,8 +6,9 @@ const NAV_LINKS = [
   { href: '#skills',   label: '02_skills' },
   { href: '#projects', label: '03_pipelines' },
   { href: '#timeline', label: '04_timeline' },
-  { href: '#sql',      label: '05_sql' },
-  { href: '#contact',  label: '06_contact' },
+  { href: '#resume',   label: '05_resume' },
+  { href: '#sql',      label: '06_sql' },
+  { href: '#contact',  label: '07_contact' },
 ];
 
 function useActiveSection() {
@@ -117,12 +118,12 @@ export default function Navigation({ theme, onThemeToggle }) {
           <motion.button
             onClick={onThemeToggle}
             aria-label="Toggle cyber theme"
-            className="btn btn-violet !py-1.5 !px-3 !text-[11px]"
+            className="btn btn-violet !py-1.5 !px-3 !text-[11px] gap-1.5"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <span>◐</span>
-            <span className="hidden md:inline">{theme === 'cyber' ? 'default' : 'cyber'}</span>
+            <span className="hidden md:inline">{theme === 'cyber' ? 'Default' : 'Cyber'}</span>
           </motion.button>
 
           {/* Download Resume — nav shortcut */}

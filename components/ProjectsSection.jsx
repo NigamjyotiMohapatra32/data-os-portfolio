@@ -114,14 +114,19 @@ function ProjectCard({ project, visible, delay }) {
 
   return (
     <motion.article
-      className="glass rounded-2xl overflow-hidden group"
+      className="glass rounded-2xl overflow-hidden group relative"
       style={{ borderColor: `${project.color}20` }}
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.55, delay: delay / 1000 }}
-      whileHover={{ y: -4, borderColor: `${project.color}40` }}
+      whileHover={{ y: -6, borderColor: `${project.color}55`, boxShadow: `0 24px 48px -16px ${project.color}35` }}
     >
+      {/* ambient glow on hover */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${project.color}08, transparent 55%)` }}
+      />
       {/* Top accent bar */}
       <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${project.color}, transparent)` }} />
 

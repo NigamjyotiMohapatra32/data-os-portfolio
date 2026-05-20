@@ -47,16 +47,17 @@ function useCountUp(target, duration = 1800, start = false) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     if (!start) return;
-    let startTime = null;
-    const step = (ts) => {
-      if (!startTime) startTime = ts;
-      const progress = Math.min((ts - startTime) / duration, 1);
+    const steps = 40;
+    const interval = Math.max(20, duration / steps);
+    let step = 0;
+    const id = setInterval(() => {
+      step++;
+      const progress = Math.min(step / steps, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-      else setValue(target);
-    };
-    requestAnimationFrame(step);
+      setValue(step >= steps ? target : Math.floor(eased * target));
+      if (step >= steps) clearInterval(id);
+    }, interval);
+    return () => clearInterval(id);
   }, [start, target, duration]);
   return value;
 }
@@ -68,18 +69,50 @@ const STATS = [
   { label: 'Perf Improvement', value: 35, suffix: '%', color: '#f472b6' },
 ];
 
-function StatCard({ stat, animate }) {
-  const count = useCountUp(stat.value, 2000, animate);
+const StatCard = React.memo(function StatCard({ stat, delay = 0 }) {
+  const [show, setShow] = useState(false);
+  const [counting, setCounting] = useState(false);
+  const count = useCountUp(stat.value, 2000, counting);
+
+  // Card fade-in: staggered by delay
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  // Count-up: starts at 4s (auto-boot) or when portfolioBootDone event fires
+  useEffect(() => {
+    const start = () => setCounting(true);
+    const t = setTimeout(start, 4000 + delay);
+    window.addEventListener('portfolioBootDone', start, { once: true });
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('portfolioBootDone', start);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <div className="glass rounded-xl p-4 text-center flex flex-col gap-1 hover:border-white/20 transition-all duration-300"
-         style={{ borderColor: `${stat.color}30` }}>
-      <div className="font-mono font-bold text-2xl" style={{ color: stat.color }}>
+    <motion.div
+      className="glass rounded-xl p-4 text-center flex flex-col gap-1 relative overflow-hidden group cursor-default"
+      style={{
+        borderColor: `${stat.color}25`,
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateY(0)' : 'translateY(14px)',
+        transition: 'opacity 0.5s ease, transform 0.5s ease',
+      }}
+      whileHover={{ scale: 1.06, borderColor: `${stat.color}60`, boxShadow: `0 8px 24px -8px ${stat.color}40` }}
+    >
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 50% 50%, ${stat.color}12, transparent 70%)` }}
+      />
+      <div className="font-mono font-bold text-2xl relative z-10" style={{ color: stat.color }}>
         {count}{stat.suffix}
       </div>
-      <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider leading-tight">{stat.label}</div>
-    </div>
+      <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider leading-tight relative z-10">{stat.label}</div>
+    </motion.div>
   );
-}
+});
 
 const RESUME_URL = import.meta.env.VITE_RESUME_URL || null;
 const RESUME_COUNTER_DOC = 'meta/resumeDownloads';
@@ -96,19 +129,9 @@ function useResumeDownloadCount() {
 
 export default function HeroSection({ onLaunchDataOS }) {
   const role = useTypewriter(ROLES);
-  const [statsVisible, setStatsVisible] = useState(false);
   const statsRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
   const downloadCount = useResumeDownloadCount();
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   const handleResumeDownload = useCallback(async () => {
     if (downloading) return;
@@ -254,8 +277,8 @@ export default function HeroSection({ onLaunchDataOS }) {
 
           {/* Stats row */}
           <div ref={statsRef} className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {STATS.map((s) => (
-              <StatCard key={s.label} stat={s} animate={statsVisible} />
+            {STATS.map((s, i) => (
+              <StatCard key={s.label} stat={s} delay={i * 120} />
             ))}
           </div>
         </div>
