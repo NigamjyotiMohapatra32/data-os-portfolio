@@ -39,14 +39,19 @@ service cloud.firestore {
       allow update: if signedIn();
     }
 
-    // Resume download counter — anyone can read count, anyone can increment
-    match /meta/{docId} {
+    // meta/resumeDownloads — public read, public increment-only update
+    match /meta/resumeDownloads {
       allow read: if true;
       allow create: if true;
-      // Only allow incrementing count field (not setting arbitrary data)
       allow update: if
         request.resource.data.keys().hasOnly(['count']) &&
         request.resource.data.count == resource.data.count + 1;
+    }
+
+    // meta/siteConfig — public read, signed-in write (admin sets resumeUrl etc.)
+    match /meta/siteConfig {
+      allow read: if true;
+      allow write: if signedIn();
     }
   }
 }

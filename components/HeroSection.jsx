@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../lib/firebase';
 import { doc, getDoc, updateDoc, increment, setDoc } from 'firebase/firestore';
+import { useResumeUrl } from '../lib/useSiteConfig';
 
 const ROLES = [
   'Dimensional Data Modeller',
@@ -114,9 +115,6 @@ const StatCard = React.memo(function StatCard({ stat, delay = 0 }) {
   );
 });
 
-const RESUME_URL = import.meta.env.VITE_RESUME_URL || null;
-const RESUME_COUNTER_DOC = 'meta/resumeDownloads';
-
 function useResumeDownloadCount() {
   const [count, setCount] = useState(null);
   useEffect(() => {
@@ -132,6 +130,7 @@ export default function HeroSection({ onLaunchDataOS }) {
   const statsRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
   const downloadCount = useResumeDownloadCount();
+  const { url: RESUME_URL } = useResumeUrl();
 
   const handleResumeDownload = useCallback(async () => {
     if (downloading) return;

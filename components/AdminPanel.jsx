@@ -6,8 +6,9 @@ import {
   ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject, getMetadata,
 } from 'firebase/storage';
 import {
-  collection, getDocs, orderBy, query, deleteDoc, doc, getDoc, updateDoc,
+  collection, getDocs, orderBy, query, deleteDoc, doc, getDoc, updateDoc, setDoc, serverTimestamp,
 } from 'firebase/firestore';
+import { saveSiteConfig } from '../lib/useSiteConfig';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ALLOWED_TYPES = [
@@ -470,6 +471,213 @@ function MessageCard({ s, onDelete, onMarkRead }) {
   );
 }
 
+// ─── Upload Tab ──────────────────────────────────────────────────────────────
+function UploadTab({ storageAvailable, dragging, setDragging, handleFiles, uploads, setUploads, flash, resumeUrl, setResumeUrl }) {
+  const [urlInput, setUrlInput] = useState(resumeUrl || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveUrl = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    setSaving(true);
+    try {
+      await saveSiteConfig({ resumeUrl: url, updatedAt: new Date().toISOString() });
+      setResumeUrl(url);
+      setSaved(true);
+      flash('✓ Resume URL saved — portfolio download button updated instantly!');
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      flash('Save failed: ' + err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClear = async () => {
+    try {
+      await saveSiteConfig({ resumeUrl: '', updatedAt: new Date().toISOString() });
+      setResumeUrl('');
+      setUrlInput('');
+      flash('Resume URL cleared.');
+    } catch (err) {
+      flash('Clear failed: ' + err.message, 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Resume URL Manager (primary, always shown) ─────────────────── */}
+      <div className="rounded-2xl p-5 space-y-4"
+        style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.04))', border: '1px solid rgba(34,211,238,0.2)' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
+            style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}>
+            📄
+          </div>
+          <div>
+            <div className="font-display font-semibold text-slate-100 text-sm">Resume URL Manager</div>
+            <div className="font-mono text-[10px] text-slate-500">Saved to Firestore · updates portfolio instantly · no redeploy</div>
+          </div>
+          {resumeUrl && (
+            <div className="ml-auto flex items-center gap-1.5 px-2 py-1 rounded-full"
+              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)' }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
+              <span className="font-mono text-[9px] text-emerald-400">ACTIVE</span>
+            </div>
+          )}
+        </div>
+
+        {/* Current URL display */}
+        {resumeUrl && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#22d3ee" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            <span className="font-mono text-[10px] text-slate-400 truncate flex-1">{resumeUrl}</span>
+            <a href={resumeUrl} target="_blank" rel="noopener noreferrer"
+              className="font-mono text-[9px] px-1.5 py-0.5 rounded transition flex-shrink-0"
+              style={{ color: '#22d3ee', border: '1px solid rgba(34,211,238,0.2)' }}>
+              Test ↗
+            </a>
+          </div>
+        )}
+
+        {/* URL input */}
+        <div className="space-y-2">
+          <label className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">
+            {resumeUrl ? 'Update Resume URL' : 'Paste Resume URL'}
+          </label>
+          <div className="flex gap-2">
+            <input
+              value={urlInput}
+              onChange={(e) => { setUrlInput(e.target.value); setSaved(false); }}
+              placeholder="https://drive.google.com/uc?export=download&id=..."
+              className="flex-1 px-3 py-2.5 rounded-xl text-xs font-mono text-slate-200 placeholder-slate-600 outline-none transition-all"
+              style={{ background: 'rgba(8,12,22,0.8)', border: `1px solid ${urlInput && urlInput !== resumeUrl ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: urlInput && urlInput !== resumeUrl ? '0 0 0 2px rgba(34,211,238,0.08)' : 'none' }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()}
+            />
+            <motion.button onClick={handleSaveUrl}
+              disabled={!urlInput.trim() || saving || urlInput.trim() === resumeUrl}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2.5 rounded-xl font-mono text-xs font-semibold transition-all flex-shrink-0"
+              style={{
+                background: saved ? 'rgba(52,211,153,0.15)' : 'rgba(34,211,238,0.12)',
+                border: `1px solid ${saved ? 'rgba(52,211,153,0.4)' : 'rgba(34,211,238,0.35)'}`,
+                color: saved ? '#34d399' : '#22d3ee',
+                opacity: !urlInput.trim() || urlInput.trim() === resumeUrl ? 0.4 : 1,
+              }}>
+              <AnimatePresence mode="wait">
+                <motion.span key={saved ? 'saved' : saving ? 'saving' : 'save'}
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>
+                  {saved ? '✓ Saved' : saving ? '…' : 'Save'}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
+            {resumeUrl && (
+              <motion.button onClick={handleClear} whileTap={{ scale: 0.95 }}
+                className="px-3 py-2.5 rounded-xl font-mono text-xs transition-all flex-shrink-0"
+                style={{ background: 'rgba(244,114,182,0.06)', border: '1px solid rgba(244,114,182,0.2)', color: '#f472b6' }}>
+                Clear
+              </motion.button>
+            )}
+          </div>
+        </div>
+
+        {/* How to get a direct Google Drive link */}
+        <div className="rounded-xl p-4 space-y-2.5"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">How to get a direct download link</div>
+          <div className="space-y-2">
+            {[
+              { icon: '🔵', label: 'Google Drive', steps: ['Upload PDF to Drive', 'Right-click → Share → Anyone with link', 'Copy link — replace /view with /export?format=pdf or use: drive.google.com/uc?export=download&id=FILE_ID'] },
+              { icon: '📦', label: 'Dropbox', steps: ['Upload PDF', 'Share → Copy link', 'Replace ?dl=0 with ?dl=1 at the end'] },
+              { icon: '🌐', label: 'Any public URL', steps: ['GitHub raw file, Cloudinary, ImgBB, your own CDN', 'Just paste any direct PDF link above'] },
+            ].map((src) => (
+              <div key={src.label} className="flex gap-2.5">
+                <span className="text-base mt-0.5">{src.icon}</span>
+                <div>
+                  <div className="font-mono text-[11px] text-slate-300 font-semibold mb-0.5">{src.label}</div>
+                  {src.steps.map((s, i) => (
+                    <div key={i} className="font-mono text-[10px] text-slate-500 leading-relaxed">
+                      {src.steps.length > 1 ? `${i + 1}. ` : ''}{s}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Firebase Storage (secondary, collapsed) ────────────────────── */}
+      <details className="group">
+        <summary className="flex items-center gap-2 cursor-pointer list-none py-2 px-1 rounded-xl select-none"
+          style={{ color: '#475569' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className="transition-transform group-open:rotate-90">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span className="font-mono text-[10px] uppercase tracking-wider">
+            Firebase Storage file upload {storageAvailable === false ? '(requires Blaze plan)' : storageAvailable === true ? '(available)' : ''}
+          </span>
+        </summary>
+
+        <div className="mt-3 space-y-3">
+          {storageAvailable === false ? (
+            <div className="rounded-xl p-4 space-y-3"
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="font-mono text-[11px] text-slate-400 leading-relaxed">
+                Firebase Storage moved to the paid Blaze plan for new projects. The URL Manager above works perfectly without it.
+                If you want direct uploads, upgrade in the Firebase Console (free up to 5 GB, just needs a credit card).
+              </p>
+              <a href="https://console.firebase.google.com/project/my-portfollio-23e3c/usage/details"
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] px-3 py-1.5 rounded-lg"
+                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+                ↗ Upgrade to Blaze in Firebase Console
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <DropZone onFiles={handleFiles} dragging={dragging} setDragging={setDragging} />
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Accepted types', value: 'PDF · DOCX · DOC · PNG · JPG · WEBP', color: '#22d3ee' },
+                  { label: 'Max file size', value: `${MAX_SIZE_MB} MB`, color: '#34d399' },
+                ].map((tip) => (
+                  <div key={tip.label} className="rounded-xl px-3 py-2.5"
+                    style={{ background: `${tip.color}08`, border: `1px solid ${tip.color}15` }}>
+                    <div className="font-mono text-[9px] text-slate-500 uppercase tracking-wider">{tip.label}</div>
+                    <div className="font-mono text-xs mt-0.5" style={{ color: tip.color }}>{tip.value}</div>
+                  </div>
+                ))}
+              </div>
+              {uploads.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Upload Queue</div>
+                    <button onClick={() => setUploads((p) => p.filter((u) => u.status === 'uploading'))}
+                      className="font-mono text-[10px] text-slate-600 hover:text-slate-400 transition">
+                      Clear Done
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {uploads.map((u) => <UploadItem key={u.id} u={u} onCopy={() => flash('URL copied!')} />)}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </details>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel() {
   const [tab, setTab] = useState('dashboard');
@@ -485,7 +693,7 @@ export default function AdminPanel() {
   const [filterType, setFilterType] = useState('all');
   const [dragging, setDragging] = useState(false);
   const [confirm, setConfirm] = useState(null);
-  const [resumeUrl, setResumeUrl] = useState('');
+  const [resumeUrl, setResumeUrl] = useState(import.meta.env.VITE_RESUME_URL || '');
   const [storageAvailable, setStorageAvailable] = useState(null); // null=unknown, true/false
 
   // ── Data loading ──────────────────────────────────────────────────────────
@@ -540,14 +748,19 @@ export default function AdminPanel() {
   }, []);
 
   // Ensure anonymous Firebase auth BEFORE any Firestore/Storage operation.
-  // Both effects previously fired simultaneously — loadSubmissions ran before
-  // signInAnonymously resolved, causing "Missing or insufficient permissions".
   useEffect(() => {
     ensureAuth()
-      .then(() => {
+      .then(async () => {
         loadFiles();
         loadSubmissions();
         loadStats();
+        // Load resume URL from Firestore (overrides env var if admin has set one)
+        try {
+          const snap = await getDoc(doc(db, 'meta', 'siteConfig'));
+          if (snap.exists() && snap.data().resumeUrl) {
+            setResumeUrl(snap.data().resumeUrl);
+          }
+        } catch { /* non-fatal */ }
       })
       .catch((err) => {
         setError(
@@ -669,10 +882,15 @@ export default function AdminPanel() {
     } catch {}
   }, []);
 
-  const handleSetResume = useCallback((url) => {
+  const handleSetResume = useCallback(async (url) => {
     setResumeUrl(url);
-    navigator.clipboard.writeText(url);
-    flash('Resume URL copied! Paste it into VITE_RESUME_URL in your Netlify env vars → redeploy.');
+    try {
+      await saveSiteConfig({ resumeUrl: url, updatedAt: new Date().toISOString() });
+      flash('✓ Resume URL saved to Firestore — portfolio updated instantly, no redeploy needed!');
+    } catch (err) {
+      navigator.clipboard.writeText(url);
+      flash('Saved locally. Firestore write failed: ' + err.message, 'error');
+    }
   }, [flash]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
@@ -845,10 +1063,13 @@ export default function AdminPanel() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="rounded-xl p-4 space-y-2"
                     style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)' }}>
-                    <div className="font-mono text-[10px] text-cyan-400 uppercase tracking-wider">Active Resume URL</div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+                      <span className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider">Active Resume URL (live in Firestore)</span>
+                    </div>
                     <div className="font-mono text-[10px] text-slate-400 break-all">{resumeUrl}</div>
-                    <div className="font-mono text-[10px] text-slate-600">
-                      Add VITE_RESUME_URL={resumeUrl} to Netlify environment variables and redeploy.
+                    <div className="font-mono text-[10px] text-slate-500">
+                      Portfolio reads this URL live — no redeploy needed. Change it anytime from the Upload tab.
                     </div>
                   </motion.div>
                 )}
@@ -858,20 +1079,6 @@ export default function AdminPanel() {
             {/* ══ FILES ════════════════════════════════════════════════════ */}
             {tab === 'files' && (
               <div className="space-y-4">
-                {storageAvailable === false && (
-                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl p-4 flex items-center gap-3"
-                    style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                    <span>⚠️</span>
-                    <span className="font-mono text-xs text-amber-300">Firebase Storage not available on Spark plan — upgrade to Blaze to use file uploads.</span>
-                    <a href="https://console.firebase.google.com/project/my-portfollio-23e3c/usage/details"
-                      target="_blank" rel="noopener noreferrer"
-                      className="ml-auto font-mono text-[10px] px-2.5 py-1 rounded-lg flex-shrink-0"
-                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
-                      Upgrade →
-                    </a>
-                  </motion.div>
-                )}
                 {/* Toolbar */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="flex-1 relative min-w-[140px]">
@@ -1007,73 +1214,12 @@ export default function AdminPanel() {
 
             {/* ══ UPLOAD ══════════════════════════════════════════════════ */}
             {tab === 'upload' && (
-              <div className="space-y-4">
-                {/* Storage unavailable banner */}
-                {storageAvailable === false && (
-                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                    className="rounded-2xl p-5 space-y-3"
-                    style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)' }}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">⚠️</span>
-                      <span className="font-display font-semibold text-amber-400">Firebase Storage requires the Blaze plan</span>
-                    </div>
-                    <p className="font-mono text-xs text-slate-400 leading-relaxed">
-                      File uploads use Firebase Storage, which moved to the paid Blaze plan for new projects.
-                      Your Firestore data (messages, counters) works perfectly on the free Spark plan.
-                    </p>
-                    <div className="space-y-1.5 font-mono text-[11px]">
-                      <div className="text-slate-500 uppercase tracking-wider">To enable uploads — two options:</div>
-                      <div className="flex items-start gap-2 text-amber-300">
-                        <span className="mt-0.5">①</span>
-                        <span>Upgrade to Blaze (pay-as-you-go, free up to 5GB — just needs a credit card on file)</span>
-                      </div>
-                      <div className="flex items-start gap-2 text-emerald-400">
-                        <span className="mt-0.5">②</span>
-                        <span>Upload your resume to Google Drive / Dropbox and paste the public link into Netlify env → <code className="text-cyan-400">VITE_RESUME_URL</code></span>
-                      </div>
-                    </div>
-                    <a href="https://console.firebase.google.com/project/my-portfollio-23e3c/usage/details"
-                      target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-mono text-[11px] px-3 py-1.5 rounded-lg transition"
-                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
-                      ↗ Upgrade in Firebase Console
-                    </a>
-                  </motion.div>
-                )}
-                {storageAvailable !== false && <DropZone onFiles={handleFiles} dragging={dragging} setDragging={setDragging} />}
-
-                {/* Tips */}
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Accepted types', value: 'PDF · DOCX · DOC · PNG · JPG · WEBP', color: '#22d3ee' },
-                    { label: 'Max file size', value: `${MAX_SIZE_MB} MB`, color: '#34d399' },
-                    { label: 'Max files at once', value: `${MAX_FILES} files`, color: '#a78bfa' },
-                    { label: 'Storage', value: 'Firebase Storage', color: '#f472b6' },
-                  ].map((tip) => (
-                    <div key={tip.label} className="rounded-xl px-3 py-2.5"
-                      style={{ background: `${tip.color}08`, border: `1px solid ${tip.color}15` }}>
-                      <div className="font-mono text-[9px] text-slate-500 uppercase tracking-wider">{tip.label}</div>
-                      <div className="font-mono text-xs mt-0.5" style={{ color: tip.color }}>{tip.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Upload queue */}
-                {uploads.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Upload Queue</div>
-                      <button onClick={() => setUploads((p) => p.filter((u) => u.status === 'uploading'))}
-                        className="font-mono text-[10px] text-slate-600 hover:text-slate-400 transition">
-                        Clear Done
-                      </button>
-                    </div>
-                    <AnimatePresence>
-                      {uploads.map((u) => <UploadItem key={u.id} u={u} onCopy={() => flash('URL copied!')} />)}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </div>
+              <UploadTab
+                storageAvailable={storageAvailable}
+                dragging={dragging} setDragging={setDragging}
+                handleFiles={handleFiles} uploads={uploads} setUploads={setUploads}
+                flash={flash} resumeUrl={resumeUrl} setResumeUrl={setResumeUrl}
+              />
             )}
 
           </motion.div>

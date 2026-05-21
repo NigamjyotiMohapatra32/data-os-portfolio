@@ -2,26 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
+import { useResumeUrl } from '../lib/useSiteConfig';
 
-const RESUME_URL = import.meta.env.VITE_RESUME_URL || null;
-
-const RESOURCES = [
-  {
-    id: 'resume',
-    icon: (
-      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-    ),
-    title: 'Resume / CV',
-    desc: 'Data Modeler · SQL Developer · 5 years enterprise DWH experience across EY GDS, Circana, and TCS.',
-    tag: 'PDF',
-    tagColor: '#22d3ee',
-    available: !!RESUME_URL,
-    url: RESUME_URL,
-    filename: 'Nigamjyoti_Mohapatra_Resume.pdf',
-  },
-];
+const RESUME_ICON = (
+  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+  </svg>
+);
 
 function DownloadCard({ resource }) {
   const [downloading, setDownloading] = useState(false);
@@ -139,6 +126,17 @@ function DownloadCard({ resource }) {
 }
 
 export default function ResumeSection() {
+  const { url: resumeUrl } = useResumeUrl();
+
+  const resource = {
+    id: 'resume', icon: RESUME_ICON,
+    title: 'Resume / CV',
+    desc: 'Data Modeler · SQL Developer · 5 years enterprise DWH experience across EY GDS, Circana, and TCS.',
+    tag: 'PDF', tagColor: '#22d3ee',
+    available: !!resumeUrl, url: resumeUrl,
+    filename: 'Nigamjyoti_Mohapatra_Resume.pdf',
+  };
+
   return (
     <section id="resume" className="relative py-24 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -181,14 +179,8 @@ export default function ResumeSection() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {RESUME_URL ? (
-              <a
-                href={RESUME_URL}
-                download="Nigamjyoti_Mohapatra_Resume.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-cyan !text-xs"
-              >
+            {resumeUrl ? (
+              <a href={resumeUrl} download="Nigamjyoti_Mohapatra_Resume.pdf" target="_blank" rel="noopener noreferrer" className="btn btn-cyan !text-xs">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
@@ -201,9 +193,7 @@ export default function ResumeSection() {
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {RESOURCES.map((r) => (
-            <DownloadCard key={r.id} resource={r} />
-          ))}
+          <DownloadCard resource={resource} />
 
           {/* Placeholder cards for future resources */}
           {[
