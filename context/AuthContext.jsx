@@ -187,16 +187,23 @@ export function AuthProvider({ children }) {
       trackLogin();
       return { ok: true, user: data.user };
 
-    } catch {
-      // Backend unavailable — fall back to client-side SHA-256
+    } catch (apiErr) {
+      if (!import.meta.env.DEV) {
+        auditLog('login_error', { reason: 'api_unavailable', detail: apiErr?.message });
+        return {
+          ok: false,
+          error: 'Unable to reach the authentication server. Please try again later.',
+        };
+      }
+
+      // Dev only: optional offline login when Express is not running
       try {
-        const { validateCredentials, persistSession: localPersist } = await import('../lib/auth');
+        const { validateCredentials } = await import('../lib/auth');
         const result = await validateCredentials(userId, password);
         if (result.ok) {
-          localPersist(result.user);
           persistSession(result.user, null);
           setUser(result.user);
-          auditLog('login_success', { user: result.user, method: 'local_sha256' });
+          auditLog('login_success', { user: result.user, method: 'dev_offline' });
           trackLogin();
         } else {
           auditLog('login_failed', { reason: result.error });

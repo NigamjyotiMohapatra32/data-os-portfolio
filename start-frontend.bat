@@ -1,2 +1,4 @@
 @echo off
-start "Frontend Dev Server" cmd /k "cd /d C:\Users\user\Desktop\Data-OS-Portfolio && npm run dev"
+cd /d "%~dp0"
+echo Starting Data OS frontend on http://localhost:3000 ...
+call npm.cmd run dev

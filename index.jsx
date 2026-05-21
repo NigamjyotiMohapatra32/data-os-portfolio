@@ -5,10 +5,13 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles.css';
 
-// ── PWA Service Worker ────────────────────────────────────────────────────────
+// ── PWA Service Worker (respects Vite base for GitHub Pages subpaths) ───────
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    const base = import.meta.env.BASE_URL || '/';
+    const scope = base.endsWith('/') ? base : `${base}/`;
+    const swUrl = `${scope}sw.js`.replace(/\/{2,}/g, '/');
+    navigator.serviceWorker.register(swUrl, { scope })
       .then((reg) => console.info('[SW] Registered:', reg.scope))
       .catch((err) => console.warn('[SW] Registration failed:', err));
   });

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trackPanelOpen, trackSQLRun } from '../../lib/events';
 import BootAnimation from './BootAnimation';
@@ -7,6 +7,7 @@ import WorkspaceHeader from './Header';
 import ERDiagramCanvas from './ERDiagramCanvas';
 import SQLEditor from './SQLEditor';
 import ClockWidget from './ClockWidget';
+import PomodoroTimer from './PomodoroTimer';
 import TasksWidget from './TasksWidget';
 import NotesPanel from './NotesPanel';
 import QueryHistory from './QueryHistory';
@@ -54,6 +55,23 @@ class PanelErrorBoundary extends React.Component {
   }
 }
 
+const STATS_KEY = 'dos_workspace_stats';
+
+function loadWorkspaceStats() {
+  try {
+    const raw = sessionStorage.getItem(STATS_KEY);
+    if (!raw) return { modelsBuilt: 0, queriesExecuted: 0, pomodoroSessions: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      modelsBuilt: Number(parsed.modelsBuilt) || 0,
+      queriesExecuted: Number(parsed.queriesExecuted) || 0,
+      pomodoroSessions: Number(parsed.pomodoroSessions) || 0,
+    };
+  } catch {
+    return { modelsBuilt: 0, queriesExecuted: 0, pomodoroSessions: 0 };
+  }
+}
+
 function PanelLoading() {
   return (
     <div style={{
@@ -72,17 +90,54 @@ function PanelLoading() {
 export default function EnhancedWorkspace() {
   const [showBoot, setShowBoot] = useState(true);
   const [activePanel, setActivePanel] = useState('diagram');
+  const [stats, setStats] = useState(loadWorkspaceStats);
   const [toasts, setToasts] = useState([]);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const toastTimersRef = useRef([]);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    } catch { /* storage blocked */ }
+  }, [stats]);
+
+  const productivityScore = useMemo(() => {
+    const raw = stats.queriesExecuted * 2 + stats.modelsBuilt * 3 + stats.pomodoroSessions * 8;
+    return Math.min(100, Math.max(0, raw));
+  }, [stats]);
+
   // GA4: track panel switches
   const handlePanelChange = (panelId) => {
     setActivePanel(panelId);
     trackPanelOpen(panelId);
   };
+
+  const addToast = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    const timerId = setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+      toastTimersRef.current = toastTimersRef.current.filter((t) => t !== timerId);
+    }, 3000);
+    toastTimersRef.current.push(timerId);
+  }, []);
+
+  const handleEntityCount = useCallback((count) => {
+    setStats((s) => ({ ...s, modelsBuilt: count }));
+  }, []);
+
+  const handleQueryRun = useCallback(() => {
+    setStats((s) => ({ ...s, queriesExecuted: s.queriesExecuted + 1 }));
+    addToast('Query executed!', 'success');
+    trackSQLRun();
+  }, [addToast]);
+
+  const handlePomodoroAlert = useCallback((message) => {
+    setStats((s) => ({ ...s, pomodoroSessions: s.pomodoroSessions + 1 }));
+    addToast(message, 'success');
+  }, [addToast]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowBoot(false), 2500);
@@ -125,16 +180,6 @@ export default function EnhancedWorkspace() {
       toastTimersRef.current = [];
     };
   }, []);
-
-  const addToast = (message, type = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    const timerId = setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-      toastTimersRef.current = toastTimersRef.current.filter((t) => t !== timerId);
-    }, 3000);
-    toastTimersRef.current.push(timerId);
-  };
 
   const handleExit = () => navigate('/');
 
@@ -217,8 +262,8 @@ export default function EnhancedWorkspace() {
           <div style={panelStyle}>
             <PanelErrorBoundary key={activePanel}>
               <Suspense fallback={<PanelLoading />}>
-                {activePanel === 'diagram'   && <ERDiagramCanvas />}
-                {activePanel === 'sql'       && <SQLEditor onQueryRun={() => { addToast('Query executed!', 'success'); trackSQLRun(); }} />}
+                {activePanel === 'diagram'   && <ERDiagramCanvas onEntityCountChange={handleEntityCount} />}
+                {activePanel === 'sql'       && <SQLEditor onQueryRun={handleQueryRun} />}
                 {activePanel === 'resume'    && <ResumeAnalyzer />}
                 {activePanel === 'tasks'     && <TasksWidget />}
                 {activePanel === 'notes'     && <NotesPanel />}
@@ -234,6 +279,7 @@ export default function EnhancedWorkspace() {
           {activePanel !== 'diagram' && activePanel !== 'jobs' && (
             <div style={sidebarStyle}>
               <ClockWidget />
+              <PomodoroTimer onAlert={handlePomodoroAlert} />
               <div style={widgetCardStyle}>
                 <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace",
                   color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
@@ -242,18 +288,18 @@ export default function EnhancedWorkspace() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: 13 }}>
                   <div>
                     <div style={{ color: '#22d3ee', fontSize: 11, marginBottom: 4 }}>Models Built</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>12</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>{stats.modelsBuilt}</div>
                   </div>
                   <div>
                     <div style={{ color: '#34d399', fontSize: 11, marginBottom: 4 }}>Queries Executed</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>47</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>{stats.queriesExecuted}</div>
                   </div>
                   <div>
                     <div style={{ color: '#a78bfa', fontSize: 11, marginBottom: 4 }}>Productivity Score</div>
                     <div style={{ fontSize: 18, fontWeight: 700,
                       background: 'linear-gradient(135deg,#a78bfa,#f472b6)',
                       WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                      94%
+                      {productivityScore}%
                     </div>
                   </div>
                 </div>
@@ -266,7 +312,7 @@ export default function EnhancedWorkspace() {
       {showCommandPalette && (
         <CommandPalette
           onClose={() => setShowCommandPalette(false)}
-          onPanelChange={setActivePanel}
+          onPanelChange={handlePanelChange}
         />
       )}
       {showShortcuts && (

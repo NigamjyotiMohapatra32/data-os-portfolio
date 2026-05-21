@@ -1,2 +1,4 @@
 @echo off
-start "Backend Server" cmd /k "cd /d C:\Users\user\Desktop\Data-OS-Portfolio\backend && node src/index.js"
+cd /d "%~dp0backend"
+echo Starting Data OS API on http://localhost:4000 ...
+call npm.cmd run dev

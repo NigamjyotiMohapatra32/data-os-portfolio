@@ -10,14 +10,21 @@
 2. **Install dependencies**
    ```bash
    npm install
+   cd backend && npm install && cd ..
    ```
 
-3. **Start development server**
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Fill VITE_FIREBASE_* and backend ADMIN_* / FIREBASE_* values
+   ```
+
+4. **Start development server**
    ```bash
    npm run dev
    ```
 
-4. **Open in browser**
+5. **Open in browser**
    - Dev URL: http://localhost:5173
    - Or click the link shown in terminal
 

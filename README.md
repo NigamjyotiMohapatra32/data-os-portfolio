@@ -300,10 +300,11 @@ body.cyber {
 - **Optimized Canvas** rendering
 
 ## 📝 Notes
-- All data is stored in React state (no backend required)
-- Changes reset on page refresh
-- ER diagrams and SQL queries are client-side only
-- Fully self-contained, no external APIs
+- **Frontend** runs standalone for the portfolio; **workspace auth** requires the Express API (or dev-only offline login — see `.env.example`)
+- **Express API** (`backend/`) handles auth, notes, jobs, contact, and analytics via Firebase
+- **Python API** (`backend/python/`) powers resume scoring, SQL formatting, and DDL generation
+- Workspace quick stats persist for the browser session (`sessionStorage`); notes/jobs sync when the API is available
+- ER diagrams and SQL execution remain client-side simulations unless you connect a database backend
 
 ## ✨ Recently Added (Phase 2 - Productivity Enhanced)
 - ✅ Pomodoro Timer with circular progress visualization
@@ -319,12 +320,9 @@ body.cyber {
 
 ## 🎯 Next Steps (Optional Enhancements)
 - Add real SQL execution backend
-- Implement localStorage persistence for notes, snippets, history
-- Save/load ER diagrams locally
+- Persist ER diagrams to Firestore/localStorage
 - Export diagrams as PNG/SVG images
 - Add more SQL templates and examples
-- Theme customization (dark mode toggle)
-- Add animation libraries (Framer Motion, React Spring)
 - Create mobile-optimized responsive layout
 - Add database schema import from SQL
 - Implement collaborative features

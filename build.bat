@@ -4,7 +4,7 @@ echo  Data OS Portfolio - Production Build
 echo ============================================
 cd /d "%~dp0"
 echo Running npm build...
-call npm run build
+call npm.cmd run build
 if %errorlevel% neq 0 (
   echo.
   echo BUILD FAILED. Check errors above.

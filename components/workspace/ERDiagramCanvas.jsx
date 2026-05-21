@@ -2219,7 +2219,7 @@ function TemplatePicker({ onApply, onClose }) {
 }
 
 // ─── Main ERDiagramCanvas Component ──────────────────────────────────────────
-export default function ERDiagramCanvas() {
+export default function ERDiagramCanvas({ onEntityCountChange }) {
   // ── Multi-Canvas State ─────────────────────────────────────────────────────
   const [canvasList, setCanvasList] = useState(() => [{ id: 'canvas-1', name: 'Main Model', type: 'PDM' }]);
   const [activeCanvasId, setActiveCanvasId] = useState('canvas-1');
@@ -2274,6 +2274,9 @@ export default function ERDiagramCanvas() {
   const connectDragRef = useRef(connectDrag);
 
   useEffect(() => { entitiesRef.current  = entities;  }, [entities]);
+  useEffect(() => {
+    onEntityCountChange?.(entities.length);
+  }, [entities.length, onEntityCountChange]);
   useEffect(() => { relsRef.current      = rels;      }, [rels]);
   useEffect(() => { viewportRef.current  = viewport;  }, [viewport]);
   useEffect(() => { dragStateRef.current = dragState; }, [dragState]);
