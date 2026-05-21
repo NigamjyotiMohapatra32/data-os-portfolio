@@ -5,11 +5,21 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles.css';
 
+// ── PWA Service Worker ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then((reg) => console.info('[SW] Registered:', reg.scope))
+      .catch((err) => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+// ── React Query ───────────────────────────────────────────────────────────────
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,           // default is 3 — 1 is enough for a portfolio app
-      staleTime: 30_000,  // 30 s before re-fetching background data
+      retry: 1,
+      staleTime: 30_000,
     },
   },
 });

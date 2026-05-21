@@ -1,0 +1,13 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic[email]==2.10.3
+python-multipart==0.0.18
+
+# PDF extraction (optional — graceful fallback if missing)
+pdfplumber==0.11.4
+
+# DOCX extraction (optional — graceful fallback if missing)
+python-docx==1.1.2
+
+# SQL formatting (optional — basic formatter used as fallback)
+sqlparse==0.5.2

@@ -19,6 +19,7 @@ import './EnhancedWorkspace.css';
 const PerformanceDashboard = lazy(() => import('./PerformanceDashboard'));
 const CopilotWorkspace = lazy(() => import('../copilot/CopilotWorkspace'));
 const AdminPanel = lazy(() => import('../AdminPanel'));
+const ResumeAnalyzer = lazy(() => import('./ResumeAnalyzer'));
 
 // Panel-level error boundary
 class PanelErrorBoundary extends React.Component {
@@ -90,7 +91,7 @@ export default function EnhancedWorkspace() {
 
   useEffect(() => {
     const PANEL_KEYS = {
-      d: 'diagram', s: 'sql', a: 'tasks', n: 'notes',
+      d: 'diagram', s: 'sql', r: 'resume', a: 'tasks', n: 'notes',
       h: 'history', x: 'snippets', b: 'dashboard', j: 'jobs',
     };
     const handleKeyDown = (e) => {
@@ -218,13 +219,14 @@ export default function EnhancedWorkspace() {
               <Suspense fallback={<PanelLoading />}>
                 {activePanel === 'diagram'   && <ERDiagramCanvas />}
                 {activePanel === 'sql'       && <SQLEditor onQueryRun={() => { addToast('Query executed!', 'success'); trackSQLRun(); }} />}
+                {activePanel === 'resume'    && <ResumeAnalyzer />}
                 {activePanel === 'tasks'     && <TasksWidget />}
                 {activePanel === 'notes'     && <NotesPanel />}
                 {activePanel === 'history'   && <QueryHistory />}
                 {activePanel === 'snippets'  && <SavedSnippets />}
                 {activePanel === 'jobs'      && <CopilotWorkspace embedded />}
                 {activePanel === 'dashboard' && <PerformanceDashboard />}
-                {activePanel === 'admin'    && <AdminPanel />}
+                {activePanel === 'admin'     && <AdminPanel />}
               </Suspense>
             </PanelErrorBoundary>
           </div>
