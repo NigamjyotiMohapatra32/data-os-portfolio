@@ -1,22 +1,45 @@
 /**
- * AuthContext backed by Firebase Authentication and the Express API.
- *
- * The UI still uses the existing NODE_ID/PASSKEY screen. The server validates
- * that passkey, returns a Firebase custom token, and the browser signs in with
- * Firebase before establishing a secure httpOnly session cookie.
+ * AuthContext — enhanced with:
+ *  • Idle timeout auto-logout (30 min, via sessionManager)
+ *  • Cross-tab logout sync (BroadcastChannel + localStorage)
+ *  • Firebase onAuthStateChanged listener (catches external token revocation)
+ *  • Tab-focus session revalidation (catches expired-while-hidden)
+ *  • Full storage sweep on logout (sessionStorage + localStorage + cookies)
+ *  • History guard on protected pages (prevents Back after logout)
+ *  • sessionExpired state + reason surfaced to ProtectedRoute / LoginPage
+ *  • No UI changes — same login flow, same error messages
  */
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { signInWithCustomToken, signOut as firebaseSignOut } from 'firebase/auth';
+import React, {
+  createContext, useContext, useState, useEffect, useCallback, useRef,
+} from 'react';
+import { signInWithCustomToken, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import api, { setAuthTokenProvider } from '../lib/api';
 import { auth } from '../lib/firebase';
 import { trackLogin, trackLogout } from '../lib/events';
+import {
+  SESSION_KEY,
+  clearAllAuthStorage,
+  startIdleTimer,
+  stopIdleTimer,
+  refreshSessionTimestamp,
+  initCrossTabSync,
+  broadcastLogout,
+  watchVisibility,
+  auditLog,
+  isSessionValid,
+} from '../lib/sessionManager';
 
+// ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
-const SESSION_KEY = '__dos_session__';
-const SESSION_TTL = 8 * 60 * 60 * 1000;
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 h — must match sessionManager
+
+// ── Session storage helpers ───────────────────────────────────────────────────
 function persistSession(user, token) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, token, ts: Date.now() })); } catch {}
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, token, ts: Date.now() }));
+  } catch { /* incognito / blocked */ }
 }
 
 function readSession() {
@@ -25,43 +48,128 @@ function readSession() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Date.now() - parsed.ts > SESSION_TTL) {
-      clearSession();
+      clearAllAuthStorage();
       return null;
     }
     return parsed;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-function clearSession() {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch {}
-}
-
+// ── Provide token to API client ───────────────────────────────────────────────
 setAuthTokenProvider(() => readSession()?.token || null);
 
+// ── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser]                   = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [expiredReason, setExpiredReason]   = useState(null); // 'idle' | 'expired' | 'cross_tab'
 
-  useEffect(() => {
+  // Track whether we've completed the initial auth check
+  const authResolved = useRef(false);
+
+  // ── Internal force-logout (reason surfaced to UI) ─────────────────────────
+  const forceLogout = useCallback(async (reason) => {
+    // Guard against double-fire
+    if (!authResolved.current || (!user && !readSession())) return;
+
+    auditLog('session_expired', { reason });
+
+    stopIdleTimer();
+    broadcastLogout();
+    clearAllAuthStorage();
+    setUser(null);
+    setSessionExpired(true);
+    setExpiredReason(reason);
+
+    try { await firebaseSignOut(auth); } catch {}
+    try { await api.auth.logout(); }    catch {}
+  }, [user]);
+
+  // ── Validate stored session (called on mount & tab-focus) ─────────────────
+  const revalidateSession = useCallback(async () => {
     const session = readSession();
-    if (session?.user) {
-      setUser(session.user);
-      setLoading(false);
+
+    // Session has expired in storage (TTL elapsed)
+    if (!session) {
+      if (user) forceLogout('expired');
       return;
     }
 
+    // Session is valid — ensure user state is hydrated
+    if (!user && session.user) {
+      setUser(session.user);
+    }
+
+    // Refresh the timestamp so TTL rolls forward on activity
+    refreshSessionTimestamp();
+  }, [user, forceLogout]);
+
+  // ── Bootstrap: rehydrate from storage → try /api/auth/me ─────────────────
+  useEffect(() => {
+    const session = readSession();
+
+    if (session?.user) {
+      setUser(session.user);
+      setLoading(false);
+      authResolved.current = true;
+      return;
+    }
+
+    // Try API-backed session (httpOnly cookie)
     api.auth.me()
       .then(({ user: u }) => {
         setUser(u);
         persistSession(u, null);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => { /* no server session — remains logged out */ })
+      .finally(() => {
+        setLoading(false);
+        authResolved.current = true;
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Firebase auth state listener ──────────────────────────────────────────
+  // Catches external token revocation (e.g., Firebase console → revoke tokens)
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      // If Firebase says "logged out" but we think we're logged in → force logout
+      if (!firebaseUser && user && authResolved.current) {
+        auditLog('firebase_auth_revoked');
+        forceLogout('expired');
+      }
+    });
+    return unsub;
+  }, [user, forceLogout]);
+
+  // ── Start security features once user is authenticated ────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    // Idle timer — auto-logout on inactivity
+    startIdleTimer((reason) => forceLogout(reason));
+
+    // Tab-focus revalidation
+    const cleanupVisible = watchVisibility(revalidateSession);
+
+    // Cross-tab logout sync
+    const cleanupCrossTab = initCrossTabSync((reason) => forceLogout(reason));
+
+    auditLog('session_started', { user });
+
+    return () => {
+      stopIdleTimer();
+      cleanupVisible();
+      cleanupCrossTab();
+    };
+  }, [user, forceLogout, revalidateSession]);
+
+  // ── Login ─────────────────────────────────────────────────────────────────
   const login = useCallback(async (userId, password) => {
+    // Reset any prior expired state
+    setSessionExpired(false);
+    setExpiredReason(null);
+
     try {
       const data = await api.auth.login(userId, password);
       if (!data.ok) return { ok: false, error: data.error || 'Login failed.' };
@@ -75,11 +183,12 @@ export function AuthProvider({ children }) {
 
       persistSession(data.user, idToken);
       setUser(data.user);
+      auditLog('login_success', { user: data.user, method: 'api' });
       trackLogin();
       return { ok: true, user: data.user };
+
     } catch {
-      // Backend unavailable (404 on Netlify static host, 502/503/504, network error, etc.)
-      // Always fall back to client-side SHA-256 verification
+      // Backend unavailable — fall back to client-side SHA-256
       try {
         const { validateCredentials, persistSession: localPersist } = await import('../lib/auth');
         const result = await validateCredentials(userId, password);
@@ -87,24 +196,47 @@ export function AuthProvider({ children }) {
           localPersist(result.user);
           persistSession(result.user, null);
           setUser(result.user);
+          auditLog('login_success', { user: result.user, method: 'local_sha256' });
+          trackLogin();
+        } else {
+          auditLog('login_failed', { reason: result.error });
         }
         return result;
       } catch {
+        auditLog('login_error', { reason: 'exception' });
         return { ok: false, error: 'Authentication failed. Please try again.' };
       }
     }
   }, []);
 
+  // ── Logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
+    auditLog('logout', { user });
     trackLogout();
-    clearSession();
-    setUser(null);
-    try { await firebaseSignOut(auth); } catch {}
-    try { await api.auth.logout(); } catch {}
-  }, []);
 
+    stopIdleTimer();
+    broadcastLogout();   // tell other tabs
+    clearAllAuthStorage(); // wipe sessionStorage, localStorage, cookies
+    setUser(null);
+    setSessionExpired(false);
+    setExpiredReason(null);
+
+    // Firebase + server-side cleanup (non-blocking)
+    try { await firebaseSignOut(auth); } catch {}
+    try { await api.auth.logout(); }    catch {}
+  }, [user]);
+
+  // ── Context value ─────────────────────────────────────────────────────────
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      loading,
+      sessionExpired,
+      expiredReason,
+      login,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );

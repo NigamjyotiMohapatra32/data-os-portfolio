@@ -169,7 +169,7 @@ function CyberInput({ id, label, type, value, onChange, icon, disabled, placehol
 
 /* ─── Main LoginPage ────────────────────────────────────── */
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
   const from       = location.state?.from?.pathname ?? '/workspace';
@@ -177,13 +177,21 @@ export default function LoginPage() {
   const [userId,   setUserId]   = useState('');
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  // Pre-populate error with any session-expired message passed from ProtectedRoute
+  const [error,    setError]    = useState(location.state?.authMessage || '');
   const [shake,    setShake]    = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [authedUser, setAuthedUser]   = useState('');
   const [mounted,  setMounted]  = useState(false);
 
   const subtitle = useTyping('IDENTITY VERIFICATION REQUIRED', 40);
+
+  // While auth context is still resolving, show nothing — prevents the login
+  // form flashing momentarily for an already-authenticated user on hard refresh.
+  if (authLoading) return null;
+
+  // Redirect if already logged in (effect fires after render, useEffect is fine)
+  // Kept as useEffect (not synchronous) to satisfy React render purity.
 
   // Redirect if already logged in
   useEffect(() => {

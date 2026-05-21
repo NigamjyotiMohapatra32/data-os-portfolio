@@ -23,7 +23,19 @@ function toUser(decoded, provider = 'firebase') {
   };
 }
 
+// Prevent browsers and proxies from caching protected API responses.
+function setNoCacheHeaders(res) {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma':        'no-cache',
+    'Expires':       '0',
+    'Surrogate-Control': 'no-store',
+  });
+}
+
 export async function requireAuth(req, res, next) {
+  setNoCacheHeaders(res);
+
   const sessionCookie = req.cookies?.dos_session;
   const bearerToken = getBearerToken(req);
   const legacyCookie = req.cookies?.dos_token;
