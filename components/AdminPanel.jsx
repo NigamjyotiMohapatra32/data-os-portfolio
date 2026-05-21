@@ -10,7 +10,14 @@ import {
 } from 'firebase/firestore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/msword', // .doc
+];
 const MAX_SIZE_MB = 10;
 const MAX_FILES = 8;
 
@@ -25,6 +32,8 @@ function fileInfo(name = '', type = '') {
     return { color: '#34d399', bg: 'rgba(52,211,153,0.12)', label: 'JPG', isImage: true };
   if (type.includes('webp') || n.endsWith('.webp'))
     return { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', label: 'WEBP', isImage: true };
+  if (type.includes('wordprocessingml') || type.includes('msword') || n.endsWith('.docx') || n.endsWith('.doc'))
+    return { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', label: 'DOCX', isImage: false };
   return { color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', label: 'FILE', isImage: false };
 }
 
@@ -143,7 +152,7 @@ function DropZone({ onFiles, dragging, setDragging }) {
       transition={{ duration: 0.2 }}
       className="relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer select-none overflow-hidden"
     >
-      <input ref={inputRef} type="file" className="hidden" accept=".pdf,image/*" multiple onChange={handleChange} />
+      <input ref={inputRef} type="file" className="hidden" accept=".pdf,.docx,.doc,image/*" multiple onChange={handleChange} />
 
       {/* Animated corner glows when dragging */}
       <AnimatePresence>
@@ -172,7 +181,7 @@ function DropZone({ onFiles, dragging, setDragging }) {
       <div className="font-mono text-xs text-slate-500 mb-3">or click to browse</div>
       <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-mono"
         style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)', color: '#22d3ee' }}>
-        PDF · PNG · JPG · WEBP · max {MAX_SIZE_MB}MB · up to {MAX_FILES} files
+        PDF · DOCX · PNG · JPG · WEBP · max {MAX_SIZE_MB}MB · up to {MAX_FILES} files
       </div>
     </motion.div>
   );
@@ -561,7 +570,7 @@ export default function AdminPanel() {
     const valid = [];
     for (const file of fileList) {
       if (!ALLOWED_TYPES.includes(file.type)) {
-        flash(`"${file.name}" — type not allowed (PDF/PNG/JPG/WEBP only)`, 'error');
+        flash(`"${file.name}" — type not allowed. Use PDF, DOCX, PNG, JPG or WEBP.`, 'error');
         continue;
       }
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -587,15 +596,40 @@ export default function AdminPanel() {
         id, name: file.name, size: file.size, pct: 0, status: 'uploading', url: null, startedAt: Date.now(),
       }]);
 
+      // Watchdog: if still at 0% after 10s the bucket doesn't exist (Blaze plan required)
+      const watchdog = setTimeout(() => {
+        task.cancel();
+        setStorageAvailable(false);
+        setUploads((prev) => prev.map((u) =>
+          u.id === id && u.pct === 0 && u.status === 'uploading'
+            ? { ...u, status: 'error', error: 'Firebase Storage bucket not found. Upgrade to Blaze plan to enable uploads — see the banner below.' }
+            : u
+        ));
+      }, 10_000);
+
       task.on('state_changed',
         (snap) => {
           const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          if (pct > 0) clearTimeout(watchdog); // progressing — cancel watchdog
           setUploads((prev) => prev.map((u) => u.id === id ? { ...u, pct } : u));
         },
         (err) => {
-          setUploads((prev) => prev.map((u) => u.id === id ? { ...u, status: 'error', error: err.message } : u));
+          clearTimeout(watchdog);
+          // Detect Storage-related errors and surface the amber banner
+          const isStorageMissing =
+            err.code === 'storage/canceled' ||
+            err.code === 'storage/unknown' ||
+            err.message?.includes('bucket') ||
+            err.message?.includes('403') ||
+            err.message?.includes('does not exist');
+          if (isStorageMissing) setStorageAvailable(false);
+          setUploads((prev) => prev.map((u) =>
+            u.id === id ? { ...u, status: 'error', error: err.message } : u
+          ));
         },
         async () => {
+          clearTimeout(watchdog);
+          setStorageAvailable(true);
           const url = await getDownloadURL(task.snapshot.ref);
           setUploads((prev) => prev.map((u) => u.id === id ? { ...u, status: 'done', url, pct: 100 } : u));
           loadFiles();
@@ -1011,7 +1045,7 @@ export default function AdminPanel() {
                 {/* Tips */}
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'Accepted types', value: 'PDF · PNG · JPG · WEBP', color: '#22d3ee' },
+                    { label: 'Accepted types', value: 'PDF · DOCX · DOC · PNG · JPG · WEBP', color: '#22d3ee' },
                     { label: 'Max file size', value: `${MAX_SIZE_MB} MB`, color: '#34d399' },
                     { label: 'Max files at once', value: `${MAX_FILES} files`, color: '#a78bfa' },
                     { label: 'Storage', value: 'Firebase Storage', color: '#f472b6' },
