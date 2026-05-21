@@ -1,7 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// BASE_PATH env var lets different hosts use the right sub-path:
+//   Netlify / custom domain  →  BASE_PATH=/   (default)
+//   GitHub Pages             →  BASE_PATH=/data-os-portfolio/
+const base = process.env.BASE_PATH || '/';
+
 export default defineConfig({
+  base,
   plugins: [react()],
   server: {
     port: 3000,

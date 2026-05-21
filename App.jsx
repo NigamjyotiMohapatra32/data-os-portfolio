@@ -49,9 +49,14 @@ function AppRoutes() {
 }
 
 export default function App() {
+  // BASE_URL is set by Vite from the `base` config option.
+  // Netlify / custom domain: "/"   →  basename=""
+  // GitHub Pages:  "/data-os-portfolio/"  →  basename="/data-os-portfolio"
+  const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+
   return (
     <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <BrowserRouter basename={basename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
