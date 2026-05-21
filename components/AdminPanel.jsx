@@ -523,6 +523,11 @@ export default function AdminPanel() {
     } catch {}
   }, []);
 
+  // Sign in anonymously on mount so all Firestore + Storage rules pass
+  useEffect(() => {
+    ensureAuth().catch(() => {});
+  }, []);
+
   useEffect(() => {
     loadFiles();
     loadSubmissions();

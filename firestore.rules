@@ -24,7 +24,7 @@ service cloud.firestore {
       allow read, update, delete: if signedIn();
     }
 
-    // Contact form submissions — anyone can create, only admin can read/delete
+    // Contact form submissions — anyone can create, signed-in users can read/update/delete
     match /contactSubmissions/{submissionId} {
       allow create: if
         request.resource.data.name is string &&
@@ -35,7 +35,8 @@ service cloud.firestore {
         request.resource.data.message.size() >= 10 &&
         request.resource.data.message.size() <= 2000;
       allow read, delete: if signedIn();
-      allow update: if false;
+      // Allow admin to update the read flag
+      allow update: if signedIn();
     }
 
     // Resume download counter — anyone can read count, anyone can increment
