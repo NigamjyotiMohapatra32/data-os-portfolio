@@ -477,6 +477,7 @@ export default function AdminPanel() {
   const [dragging, setDragging] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [resumeUrl, setResumeUrl] = useState('');
+  const [storageAvailable, setStorageAvailable] = useState(null); // null=unknown, true/false
 
   // ── Data loading ──────────────────────────────────────────────────────────
   const loadFiles = useCallback(async () => {
@@ -484,6 +485,7 @@ export default function AdminPanel() {
     try {
       const listRef = ref(storage, 'uploads/');
       const result = await listAll(listRef);
+      setStorageAvailable(true);
       const items = await Promise.all(
         result.items.map(async (item) => {
           try {
@@ -497,7 +499,12 @@ export default function AdminPanel() {
       );
       setFiles(items);
     } catch (err) {
-      setError('Could not load files: ' + err.message);
+      // Firebase Storage requires the Blaze plan on new projects
+      if (err.code === 'storage/unauthorized' || err.code === 'storage/unknown' || err.message?.includes('bucket') || err.message?.includes('403') || err.message?.includes('does not exist')) {
+        setStorageAvailable(false);
+      } else {
+        setError('Could not load files: ' + err.message);
+      }
     } finally {
       setLoading((p) => ({ ...p, files: false }));
     }
@@ -817,6 +824,20 @@ export default function AdminPanel() {
             {/* ══ FILES ════════════════════════════════════════════════════ */}
             {tab === 'files' && (
               <div className="space-y-4">
+                {storageAvailable === false && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="rounded-xl p-4 flex items-center gap-3"
+                    style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                    <span>⚠️</span>
+                    <span className="font-mono text-xs text-amber-300">Firebase Storage not available on Spark plan — upgrade to Blaze to use file uploads.</span>
+                    <a href="https://console.firebase.google.com/project/my-portfollio-23e3c/usage/details"
+                      target="_blank" rel="noopener noreferrer"
+                      className="ml-auto font-mono text-[10px] px-2.5 py-1 rounded-lg flex-shrink-0"
+                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
+                      Upgrade →
+                    </a>
+                  </motion.div>
+                )}
                 {/* Toolbar */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="flex-1 relative min-w-[140px]">
@@ -953,7 +974,39 @@ export default function AdminPanel() {
             {/* ══ UPLOAD ══════════════════════════════════════════════════ */}
             {tab === 'upload' && (
               <div className="space-y-4">
-                <DropZone onFiles={handleFiles} dragging={dragging} setDragging={setDragging} />
+                {/* Storage unavailable banner */}
+                {storageAvailable === false && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl p-5 space-y-3"
+                    style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)' }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">⚠️</span>
+                      <span className="font-display font-semibold text-amber-400">Firebase Storage requires the Blaze plan</span>
+                    </div>
+                    <p className="font-mono text-xs text-slate-400 leading-relaxed">
+                      File uploads use Firebase Storage, which moved to the paid Blaze plan for new projects.
+                      Your Firestore data (messages, counters) works perfectly on the free Spark plan.
+                    </p>
+                    <div className="space-y-1.5 font-mono text-[11px]">
+                      <div className="text-slate-500 uppercase tracking-wider">To enable uploads — two options:</div>
+                      <div className="flex items-start gap-2 text-amber-300">
+                        <span className="mt-0.5">①</span>
+                        <span>Upgrade to Blaze (pay-as-you-go, free up to 5GB — just needs a credit card on file)</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-emerald-400">
+                        <span className="mt-0.5">②</span>
+                        <span>Upload your resume to Google Drive / Dropbox and paste the public link into Netlify env → <code className="text-cyan-400">VITE_RESUME_URL</code></span>
+                      </div>
+                    </div>
+                    <a href="https://console.firebase.google.com/project/my-portfollio-23e3c/usage/details"
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-mono text-[11px] px-3 py-1.5 rounded-lg transition"
+                      style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
+                      ↗ Upgrade in Firebase Console
+                    </a>
+                  </motion.div>
+                )}
+                {storageAvailable !== false && <DropZone onFiles={handleFiles} dragging={dragging} setDragging={setDragging} />}
 
                 {/* Tips */}
                 <div className="grid grid-cols-2 gap-2">
