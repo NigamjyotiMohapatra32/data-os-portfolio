@@ -9,3 +9,6 @@ backend/.env
 *.log
 *.zip
 port-status.txt
+
+# Local Netlify folder
+.netlify
