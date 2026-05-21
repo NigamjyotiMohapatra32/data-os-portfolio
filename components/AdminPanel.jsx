@@ -523,15 +523,22 @@ export default function AdminPanel() {
     } catch {}
   }, []);
 
-  // Sign in anonymously on mount so all Firestore + Storage rules pass
+  // Ensure anonymous Firebase auth BEFORE any Firestore/Storage operation.
+  // Both effects previously fired simultaneously — loadSubmissions ran before
+  // signInAnonymously resolved, causing "Missing or insufficient permissions".
   useEffect(() => {
-    ensureAuth().catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    loadFiles();
-    loadSubmissions();
-    loadStats();
+    ensureAuth()
+      .then(() => {
+        loadFiles();
+        loadSubmissions();
+        loadStats();
+      })
+      .catch((err) => {
+        setError(
+          `Firebase Anonymous Auth failed — enable it in Firebase Console → Authentication → Sign-in methods → Anonymous. (${err.message})`
+        );
+        setLoading({ files: false, submissions: false });
+      });
   }, [loadFiles, loadSubmissions, loadStats]);
 
   // ── Flash messages ─────────────────────────────────────────────────────────
@@ -670,7 +677,7 @@ export default function AdminPanel() {
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#34d399' }} />
               <span className="font-mono text-[10px] text-emerald-400">LIVE</span>
             </motion.div>
-            <button onClick={() => { loadFiles(); loadSubmissions(); loadStats(); }}
+            <button onClick={() => ensureAuth().then(() => { loadFiles(); loadSubmissions(); loadStats(); }).catch(() => {})}
               className="font-mono text-[10px] px-2.5 py-1 rounded-full transition"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }}>
               ↻ Refresh
@@ -756,7 +763,7 @@ export default function AdminPanel() {
                       { label: '⬆ Upload File', action: () => setTab('upload'), color: '#22d3ee' },
                       { label: '📬 View Messages', action: () => setTab('messages'), color: '#a78bfa' },
                       { label: '📁 Manage Files', action: () => setTab('files'), color: '#34d399' },
-                      { label: '↻ Refresh All', action: () => { loadFiles(); loadSubmissions(); loadStats(); }, color: '#f472b6' },
+                      { label: '↻ Refresh All', action: () => ensureAuth().then(() => { loadFiles(); loadSubmissions(); loadStats(); }).catch(() => {}), color: '#f472b6' },
                     ].map((a, i) => (
                       <motion.button key={a.label} onClick={a.action}
                         whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
