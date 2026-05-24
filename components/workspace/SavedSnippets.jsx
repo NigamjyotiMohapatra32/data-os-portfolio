@@ -132,36 +132,51 @@ export default function SavedSnippets() {
             {search ? 'No matching snippets.' : 'No snippets saved yet.'}
           </div>
         ) : filtered.map(s => (
-          <div key={s.id} style={{
-            background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)',
-            borderRadius: 10, padding: '0.7rem', transition: 'border-color 0.2s',
-          }}>
+          <div key={s.id}
+            className="lift"
+            style={{
+              background: 'rgba(52,211,153,0.06)', border: '1.5px solid rgba(52,211,153,0.18)',
+              borderRadius: 12, padding: '0.85rem', transition: 'all 0.25s ease-in-out',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}>
             {/* Header row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 <span style={{
-                  fontSize: 9, fontFamily:"'JetBrains Mono',monospace", padding: '1px 5px',
-                  borderRadius: 4, background: 'rgba(34,211,238,0.15)', color: '#22d3ee',
-                  flexShrink: 0, textTransform: 'uppercase',
+                  fontSize: 9, fontFamily:"'JetBrains Mono',monospace", padding: '2px 6px',
+                  borderRadius: 5, background: 'rgba(34,211,238,0.15)', color: '#22d3ee',
+                  flexShrink: 0, textTransform: 'uppercase', fontWeight: 'bold'
                 }}>{s.lang}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#34d399', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#34d399', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.name}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 <button onClick={() => setExpanded(expanded === s.id ? null : s.id)} style={{
                   background: 'rgba(34,211,238,0.1)', border: 'none', color: '#22d3ee',
-                  cursor: 'pointer', fontSize: 10, padding: '2px 6px', borderRadius: 4,
-                }}>{expanded === s.id ? 'Collapse' : 'Expand'}</button>
+                  cursor: 'pointer', fontSize: 10, padding: '3px 8px', borderRadius: 5,
+                  transition: 'all 0.2s', fontWeight: '600'
+                }}
+                onMouseEnter={e => e.target.style.background='rgba(34,211,238,0.2)'}
+                onMouseLeave={e => e.target.style.background='rgba(34,211,238,0.1)'}
+                >{expanded === s.id ? 'Collapse' : 'Expand'}</button>
                 <button onClick={() => copySnippet(s.id, s.code)} style={{
                   background: copied===s.id ? 'rgba(52,211,153,0.25)' : 'rgba(52,211,153,0.12)',
-                  border: 'none', color: copied===s.id ? '#34d399' : '#94a3b8',
-                  cursor: 'pointer', fontSize: 10, padding: '2px 6px', borderRadius: 4, transition: 'all 0.2s',
-                }}>{copied===s.id ? '✓ Copied' : 'Copy'}</button>
+                  border: 'none', color: copied===s.id ? '#34d399' : '#cbd5e1',
+                  cursor: 'pointer', fontSize: 10, padding: '3px 8px', borderRadius: 5, transition: 'all 0.2s',
+                  fontWeight: '600'
+                }}
+                onMouseEnter={e => { if (copied!==s.id) e.target.style.background='rgba(52,211,153,0.2)'; }}
+                onMouseLeave={e => { if (copied!==s.id) e.target.style.background='rgba(52,211,153,0.12)'; }}
+                >{copied===s.id ? '✓ Copied' : 'Copy'}</button>
                 <button onClick={() => deleteSnippet(s.id)} style={{
                   background: 'rgba(239,68,68,0.1)', border: 'none', color: '#f87171',
-                  cursor: 'pointer', fontSize: 10, padding: '2px 5px', borderRadius: 4,
-                }}>✕</button>
+                  cursor: 'pointer', fontSize: 10, padding: '3px 7px', borderRadius: 5,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => e.target.style.background='rgba(239,68,68,0.2)'}
+                onMouseLeave={e => e.target.style.background='rgba(239,68,68,0.1)'}
+                >✕</button>
               </div>
             </div>
             {/* Code preview */}

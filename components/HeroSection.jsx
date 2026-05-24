@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { db } from '../lib/firebase';
 import { doc, getDoc, updateDoc, increment, setDoc } from 'firebase/firestore';
 import { useResumeUrl } from '../lib/useSiteConfig';
+import SectionVideoBackground from './SectionVideoBackground';
 
 const ROLES = [
   'Dimensional Data Modeller',
@@ -158,14 +159,13 @@ export default function HeroSection({ onLaunchDataOS }) {
   }, [downloading]);
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center pt-20 pb-16 px-4 md:px-8">
-      {/* Radial glow blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div style={{ position:'absolute', top:'10%', left:'5%', width:'500px', height:'500px',
-          background:'radial-gradient(circle, rgba(34,211,238,0.07) 0%, transparent 70%)', borderRadius:'50%' }} />
-        <div style={{ position:'absolute', bottom:'15%', right:'5%', width:'400px', height:'400px',
-          background:'radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)', borderRadius:'50%' }} />
-      </div>
+    <section id="hero" className="relative min-h-screen flex items-center pt-20 pb-16 px-4 md:px-8 overflow-hidden">
+      {/* Dynamic, lazy-loaded digital command grid data stream backdrop */}
+      <SectionVideoBackground 
+        videoUrl="https://assets.mixkit.co/videos/preview/mixkit-futuristic-technology-digital-grid-loop-31911-large.mp4"
+        fallbackType="cyan"
+        overlayOpacity={0.91}
+      />
 
       <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-12 gap-10 items-center relative z-10">
 
@@ -182,6 +182,17 @@ export default function HeroSection({ onLaunchDataOS }) {
             <span>UPTIME:</span>
             <span className="text-cyan-300">5y</span>
           </div>
+
+          {/* Tagline */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="font-mono text-xs text-cyan-400 mb-2.5 uppercase tracking-widest font-bold block"
+            style={{ textShadow: '0 0 10px rgba(34,211,238,0.35)' }}
+          >
+            🚀 Enterprise Data Warehouse Architecture Reimagined
+          </motion.div>
 
           {/* Name */}
           <h1 className="font-display font-bold leading-[0.95] tracking-tight text-5xl md:text-7xl lg:text-[5.5rem]">
@@ -299,116 +310,113 @@ export default function HeroSection({ onLaunchDataOS }) {
 
             <svg viewBox="0 0 480 340" className="w-full h-auto">
               <defs>
-                <linearGradient id="lg1" x1="0" x2="1">
-                  <stop offset="0" stopColor="#22d3ee"/>
-                  <stop offset="1" stopColor="#a78bfa"/>
+                <linearGradient id="bronzeGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#b45309" />
+                  <stop offset="100%" stopColor="#d97706" />
                 </linearGradient>
-                <linearGradient id="lg2" x1="0" x2="1">
-                  <stop offset="0" stopColor="#34d399"/>
-                  <stop offset="1" stopColor="#22d3ee"/>
+                <linearGradient id="silverGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#94a3b8" />
+                  <stop offset="100%" stopColor="#cbd5e1" />
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+                <linearGradient id="cyanGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="100%" stopColor="#a78bfa" />
                 </linearGradient>
                 <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="blur"/>
+                  <feGaussianBlur stdDeviation="1.8" result="blur"/>
                   <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
               </defs>
 
-              {/* ── Row 1: Sources ── */}
-              <g fontFamily="JetBrains Mono" fontSize="9.5" fill="#cbd5e1">
-
-                {/* OLTP Source */}
+              {/* Diagrams group */}
+              <g fontFamily="JetBrains Mono" fontSize="9" fill="#94a3b8">
+                
+                {/* 1. Ingress Boundary */}
                 <g filter="url(#glow)">
-                  <rect x="8" y="20" width="100" height="46" rx="8" fill="#0c1322" stroke="#22d3ee" strokeWidth="1.2"/>
-                  <circle cx="18" cy="30" r="2.5" fill="#22d3ee"/>
-                  <text x="26" y="33" fill="#22d3ee" fontSize="8">SOURCE</text>
-                  <text x="14" y="50" fill="#e2e8f0" fontWeight="700" fontSize="10">OLTP_DB</text>
-                  <text x="14" y="62" fill="#64748b" fontSize="8">SQL Server</text>
+                  <rect x="8" y="20" width="86" height="40" rx="6" fill="#0c1322" stroke="#60a5fa" strokeWidth="1"/>
+                  <circle cx="16" cy="30" r="2" fill="#60a5fa"/>
+                  <text x="23" y="32" fill="#60a5fa" fontSize="7" fontWeight="bold">SRC: STREAM</text>
+                  <text x="14" y="48" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">Kafka Ingest</text>
                 </g>
 
-                {/* API Source */}
                 <g filter="url(#glow)">
-                  <rect x="8" y="82" width="100" height="46" rx="8" fill="#0c1322" stroke="#fbbf24" strokeWidth="1.2"/>
-                  <circle cx="18" cy="92" r="2.5" fill="#fbbf24"/>
-                  <text x="26" y="95" fill="#fbbf24" fontSize="8">SOURCE</text>
-                  <text x="14" y="112" fill="#e2e8f0" fontWeight="700" fontSize="10">REST_API</text>
-                  <text x="14" y="124" fill="#64748b" fontSize="8">Azure Blob</text>
+                  <rect x="8" y="74" width="86" height="40" rx="6" fill="#0c1322" stroke="#22d3ee" strokeWidth="1"/>
+                  <circle cx="16" cy="84" r="2" fill="#22d3ee"/>
+                  <text x="23" y="86" fill="#22d3ee" fontSize="7" fontWeight="bold">SRC: CDC</text>
+                  <text x="14" y="102" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">OLTP_Log</text>
                 </g>
 
-                {/* ── ADF Pipeline box ── */}
+                {/* 2. Medallion Bronze */}
                 <g filter="url(#glow)">
-                  <rect x="152" y="30" width="120" height="82" rx="10" fill="#0c1322" stroke="#34d399" strokeWidth="1.5"/>
-                  <circle cx="163" cy="42" r="3" fill="#34d399"/>
-                  <text x="172" y="46" fill="#34d399" fontSize="8">ADF PIPELINE</text>
-                  <text x="162" y="66" fill="#e2e8f0" fontWeight="700" fontSize="10">transform()</text>
-                  <text x="162" y="80" fill="#64748b" fontSize="8">SCD Type 2</text>
-                  <text x="162" y="92" fill="#64748b" fontSize="8">Data Cleanse</text>
-                  <text x="162" y="104" fill="#64748b" fontSize="8">Surrogate Keys</text>
+                  <rect x="116" y="47" width="86" height="40" rx="6" fill="#0c1322" stroke="#b45309" strokeWidth="1.2"/>
+                  <circle cx="124" cy="57" r="2" fill="#b45309"/>
+                  <text x="131" y="59" fill="#b45309" fontSize="7" fontWeight="bold">BRONZE LAYER</text>
+                  <text x="122" y="75" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">Delta Raw</text>
                 </g>
 
-                {/* ── Dim Layer ── */}
+                {/* 3. Medallion Silver */}
                 <g filter="url(#glow)">
-                  <rect x="330" y="20" width="110" height="46" rx="8" fill="#0c1322" stroke="#a78bfa" strokeWidth="1.2"/>
-                  <circle cx="340" cy="30" r="2.5" fill="#a78bfa"/>
-                  <text x="348" y="33" fill="#a78bfa" fontSize="8">DIM LAYER</text>
-                  <text x="336" y="52" fill="#e2e8f0" fontWeight="700" fontSize="10">dim_customer</text>
-                  <text x="336" y="63" fill="#64748b" fontSize="8">dim_product</text>
+                  <rect x="224" y="47" width="86" height="40" rx="6" fill="#0c1322" stroke="#94a3b8" strokeWidth="1.2"/>
+                  <circle cx="232" cy="57" r="2" fill="#94a3b8"/>
+                  <text x="239" y="59" fill="#cbd5e1" fontSize="7" fontWeight="bold">SILVER LAYER</text>
+                  <text x="230" y="75" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">Conformed</text>
                 </g>
 
-                {/* ── Fact Layer ── */}
+                {/* 4. Medallion Gold */}
                 <g filter="url(#glow)">
-                  <rect x="330" y="82" width="110" height="46" rx="8" fill="#0c1322" stroke="#f472b6" strokeWidth="1.2"/>
-                  <circle cx="340" cy="92" r="2.5" fill="#f472b6"/>
-                  <text x="348" y="95" fill="#f472b6" fontSize="8">FACT LAYER</text>
-                  <text x="336" y="114" fill="#e2e8f0" fontWeight="700" fontSize="10">fact_sales</text>
-                  <text x="336" y="125" fill="#64748b" fontSize="8">fact_inventory</text>
+                  <rect x="332" y="47" width="140" height="40" rx="6" fill="#0c1322" stroke="#fbbf24" strokeWidth="1.5"/>
+                  <circle cx="340" cy="57" r="2" fill="#fbbf24"/>
+                  <text x="347" y="59" fill="#fbbf24" fontSize="7" fontWeight="bold">GOLD LAYER (KIMBALL)</text>
+                  <text x="338" y="75" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">dim_cust · fact_claims</text>
                 </g>
 
-                {/* ── OLAP / Power BI ── */}
+                {/* 5. Serving API & BI */}
                 <g filter="url(#glow)">
-                  <rect x="152" y="168" width="176" height="46" rx="8" fill="#0c1322" stroke="#22d3ee" strokeWidth="1.2"/>
-                  <circle cx="163" cy="178" r="2.5" fill="#22d3ee"/>
-                  <text x="172" y="181" fill="#22d3ee" fontSize="8">OLAP CUBE / POWER BI</text>
-                  <text x="162" y="200" fill="#e2e8f0" fontWeight="700" fontSize="10">Star Schema · Aggregations</text>
-                  <text x="162" y="212" fill="#64748b" fontSize="8">KPIs · Dashboards</text>
+                  <rect x="116" y="160" width="150" height="40" rx="6" fill="#0c1322" stroke="#a78bfa" strokeWidth="1.2"/>
+                  <circle cx="124" cy="170" r="2" fill="#a78bfa"/>
+                  <text x="131" y="172" fill="#a78bfa" fontSize="7" fontWeight="bold">SERVING LAYER &amp; APIs</text>
+                  <text x="122" y="188" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">GraphQL · FastAPI</text>
                 </g>
 
-                {/* ── Metrics row ── */}
+                <g filter="url(#glow)">
+                  <rect x="290" y="160" width="182" height="40" rx="6" fill="#0c1322" stroke="#f472b6" strokeWidth="1.2"/>
+                  <circle cx="298" cy="170" r="2" fill="#f472b6"/>
+                  <text x="305" y="172" fill="#f472b6" fontSize="7" fontWeight="bold">BI &amp; GENAI INSIGHTS</text>
+                  <text x="296" y="188" fill="#e2e8f0" fontWeight="bold" fontSize="8.5">Power BI · Semantic Models</text>
+                </g>
+
+                {/* Performance stats row */}
                 <g>
-                  <rect x="8" y="176" width="128" height="46" rx="8" fill="#0c1322" stroke="#1f2a44"/>
-                  <text x="18" y="192" fill="#94a3b8" fontSize="8">throughput / 30d</text>
-                  <polyline points="18,215 38,208 58,212 80,200 102,206 128,190"
-                    fill="none" stroke="#22d3ee" strokeWidth="1.8"/>
-                  <text x="18" y="225" fill="#22d3ee" fontSize="8">↑ 38%</text>
+                  <rect x="8" y="160" width="86" height="40" rx="6" fill="#0c1322" stroke="#1f2a44"/>
+                  <text x="14" y="174" fill="#64748b" fontSize="7">ingest ok</text>
+                  <text x="14" y="191" fill="#34d399" fontWeight="bold" fontSize="13">99.98%</text>
                 </g>
                 <g>
-                  <rect x="8" y="234" width="60" height="46" rx="8" fill="#0c1322" stroke="#1f2a44"/>
-                  <text x="14" y="250" fill="#94a3b8" fontSize="7.5">SCD2 hits</text>
-                  <text x="14" y="268" fill="#34d399" fontWeight="700" fontSize="13">1.2M</text>
+                  <rect x="8" y="210" width="86" height="40" rx="6" fill="#0c1322" stroke="#1f2a44"/>
+                  <text x="14" y="224" fill="#64748b" fontSize="7">latency</text>
+                  <text x="14" y="241" fill="#22d3ee" fontWeight="bold" fontSize="13">140ms</text>
                 </g>
                 <g>
-                  <rect x="78" y="234" width="60" height="46" rx="8" fill="#0c1322" stroke="#1f2a44"/>
-                  <text x="84" y="250" fill="#94a3b8" fontSize="7.5">models</text>
-                  <text x="84" y="268" fill="#a78bfa" fontWeight="700" fontSize="13">30+</text>
+                  <rect x="116" y="220" width="356" height="74" rx="8" fill="#0c1322" stroke="#1f2a44"/>
+                  <text x="128" y="238" fill="#64748b" fontSize="7.5" fontWeight="bold">DATA OPS / GOVERNANCE ENGINE</text>
+                  <text x="128" y="258" fill="#cbd5e1" fontSize="8.5">✔ Data Contracts: ACTIVE</text>
+                  <text x="128" y="272" fill="#cbd5e1" fontSize="8.5">✔ Lineage Traced · RBAC Encrypted · Observability online</text>
                 </g>
-                <g>
-                  <rect x="346" y="168" width="94" height="112" rx="8" fill="#0c1322" stroke="#1f2a44"/>
-                  <text x="356" y="186" fill="#94a3b8" fontSize="8">jobs ok</text>
-                  <text x="356" y="218" fill="#34d399" fontWeight="700" fontSize="22">99.4%</text>
-                  <circle cx="428" cy="182" r="4" fill="#34d399"/>
-                  <text x="356" y="244" fill="#94a3b8" fontSize="7.5">avg latency</text>
-                  <text x="356" y="260" fill="#22d3ee" fontWeight="700" fontSize="12">142ms</text>
-                  <text x="356" y="272" fill="#94a3b8" fontSize="7.5">p99</text>
-                </g>
+
               </g>
 
-              {/* ── Flow lines ── */}
-              <g fill="none" strokeWidth="1.5">
-                <path className="flow-line" d="M108 43 C130 43 130 71 152 71" stroke="url(#lg2)"/>
-                <path className="flow-line" d="M108 105 C130 105 130 81 152 81" stroke="url(#lg2)"/>
-                <path className="flow-line" d="M272 48 C300 48 308 43 330 43" stroke="url(#lg1)"/>
-                <path className="flow-line" d="M272 80 C300 80 308 105 330 105" stroke="url(#lg1)"/>
-                <path className="flow-line" d="M385 128 C385 148 295 158 328 191" stroke="#a78bfa" opacity="0.6"/>
-                <path className="flow-line" d="M385 128 L385 148 L330 191" stroke="#f472b6" opacity="0.6"/>
+              {/* Connection flow lines */}
+              <g fill="none" strokeWidth="1.2">
+                <path className="flow-line" d="M94 40 C105 40 105 57 116 57" stroke="#60a5fa" opacity="0.6"/>
+                <path className="flow-line" d="M94 94 C105 94 105 77 116 77" stroke="#22d3ee" opacity="0.6"/>
+                <path className="flow-line" d="M202 67 L224 67" stroke="#b45309" opacity="0.7"/>
+                <path className="flow-line" d="M310 67 L332 67" stroke="#94a3b8" opacity="0.7"/>
+                <path className="flow-line" d="M402 87 L402 110 C402 135 240 135 240 160" stroke="#fbbf24" opacity="0.6"/>
+                <path className="flow-line" d="M402 87 L402 110 C402 135 340 135 340 160" stroke="#fbbf24" opacity="0.6"/>
               </g>
             </svg>
           </div>

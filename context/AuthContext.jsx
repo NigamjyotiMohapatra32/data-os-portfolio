@@ -1,19 +1,11 @@
 /**
- * AuthContext — enhanced with:
- *  • Idle timeout auto-logout (30 min, via sessionManager)
- *  • Cross-tab logout sync (BroadcastChannel + localStorage)
- *  • Firebase onAuthStateChanged listener (catches external token revocation)
- *  • Tab-focus session revalidation (catches expired-while-hidden)
- *  • Full storage sweep on logout (sessionStorage + localStorage + cookies)
- *  • History guard on protected pages (prevents Back after logout)
- *  • sessionExpired state + reason surfaced to ProtectedRoute / LoginPage
- *  • No UI changes — same login flow, same error messages
+ * AuthContext — session lifecycle with Firebase, API, and dev-offline providers.
  */
 import React, {
   createContext, useContext, useState, useEffect, useCallback, useRef,
 } from 'react';
 import { signInWithCustomToken, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import api, { setAuthTokenProvider } from '../lib/api';
+import api, { setAuthTokenProvider, isAuthClientError, isApiUnreachable } from '../lib/api';
 import { auth } from '../lib/firebase';
 import { trackLogin, trackLogout } from '../lib/events';
 import {
@@ -26,20 +18,27 @@ import {
   broadcastLogout,
   watchVisibility,
   auditLog,
-  isSessionValid,
 } from '../lib/sessionManager';
 
-// ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
+const SESSION_TTL = 8 * 60 * 60 * 1000;
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 h — must match sessionManager
+/** @typedef {'firebase' | 'cookie' | 'dev'} AuthProvider */
 
-// ── Session storage helpers ───────────────────────────────────────────────────
-function persistSession(user, token) {
+function persistSession(user, token, authProvider) {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, token, ts: Date.now() }));
+    const provider = authProvider || (token ? 'firebase' : 'dev');
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ user, token, ts: Date.now(), authProvider: provider }),
+    );
   } catch { /* incognito / blocked */ }
+}
+
+function sessionAuthProvider(session) {
+  if (!session) return null;
+  if (session.authProvider) return session.authProvider;
+  return session.token ? 'firebase' : 'dev';
 }
 
 function readSession() {
@@ -55,24 +54,22 @@ function readSession() {
   } catch { return null; }
 }
 
-// ── Provide token to API client ───────────────────────────────────────────────
 setAuthTokenProvider(() => readSession()?.token || null);
 
-// ── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
   const [user, setUser]                   = useState(null);
   const [loading, setLoading]             = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
-  const [expiredReason, setExpiredReason]   = useState(null); // 'idle' | 'expired' | 'cross_tab'
+  const [expiredReason, setExpiredReason]   = useState(null);
 
-  // Track whether we've completed the initial auth check
   const authResolved = useRef(false);
+  const firebaseSignInPending = useRef(false);
 
-  // ── Internal force-logout (reason surfaced to UI) ─────────────────────────
   const forceLogout = useCallback(async (reason) => {
-    // Guard against double-fire
-    if (!authResolved.current || (!user && !readSession())) return;
+    const session = readSession();
+    if (!authResolved.current || (!user && !session)) return;
 
+    const provider = sessionAuthProvider(session);
     auditLog('session_expired', { reason });
 
     stopIdleTimer();
@@ -82,30 +79,27 @@ export function AuthProvider({ children }) {
     setSessionExpired(true);
     setExpiredReason(reason);
 
-    try { await firebaseSignOut(auth); } catch {}
-    try { await api.auth.logout(); }    catch {}
+    if (provider === 'firebase') {
+      try { await firebaseSignOut(auth); } catch {}
+    }
+    try { await api.auth.logout(); } catch { /* backend may be offline */ }
   }, [user]);
 
-  // ── Validate stored session (called on mount & tab-focus) ─────────────────
   const revalidateSession = useCallback(async () => {
     const session = readSession();
 
-    // Session has expired in storage (TTL elapsed)
     if (!session) {
       if (user) forceLogout('expired');
       return;
     }
 
-    // Session is valid — ensure user state is hydrated
     if (!user && session.user) {
       setUser(session.user);
     }
 
-    // Refresh the timestamp so TTL rolls forward on activity
     refreshSessionTimestamp();
   }, [user, forceLogout]);
 
-  // ── Bootstrap: rehydrate from storage → try /api/auth/me ─────────────────
   useEffect(() => {
     const session = readSession();
 
@@ -116,43 +110,55 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Try API-backed session (httpOnly cookie)
     api.auth.me()
       .then(({ user: u }) => {
         setUser(u);
-        persistSession(u, null);
+        persistSession(u, null, 'cookie');
       })
-      .catch(() => { /* no server session — remains logged out */ })
+      .catch(() => { /* no server session */ })
       .finally(() => {
         setLoading(false);
         authResolved.current = true;
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Firebase auth state listener ──────────────────────────────────────────
-  // Catches external token revocation (e.g., Firebase console → revoke tokens)
+  // Wait for Firebase to restore persisted auth before treating null as revoked.
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
-      // If Firebase says "logged out" but we think we're logged in → force logout
-      if (!firebaseUser && user && authResolved.current) {
+    let unsub = () => {};
+    let cancelled = false;
+
+    const attach = () => {
+      unsub = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseSignInPending.current) return;
+        if (firebaseUser || !user || !authResolved.current) return;
+
+        const provider = sessionAuthProvider(readSession());
+        if (provider !== 'firebase') return;
+
         auditLog('firebase_auth_revoked');
         forceLogout('expired');
-      }
-    });
-    return unsub;
+      });
+    };
+
+    if (typeof auth.authStateReady === 'function') {
+      auth.authStateReady().then(() => {
+        if (!cancelled) attach();
+      });
+    } else {
+      attach();
+    }
+
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [user, forceLogout]);
 
-  // ── Start security features once user is authenticated ────────────────────
   useEffect(() => {
     if (!user) return;
 
-    // Idle timer — auto-logout on inactivity
     startIdleTimer((reason) => forceLogout(reason));
-
-    // Tab-focus revalidation
     const cleanupVisible = watchVisibility(revalidateSession);
-
-    // Cross-tab logout sync
     const cleanupCrossTab = initCrossTabSync((reason) => forceLogout(reason));
 
     auditLog('session_started', { user });
@@ -164,9 +170,7 @@ export function AuthProvider({ children }) {
     };
   }, [user, forceLogout, revalidateSession]);
 
-  // ── Login ─────────────────────────────────────────────────────────────────
   const login = useCallback(async (userId, password) => {
-    // Reset any prior expired state
     setSessionExpired(false);
     setExpiredReason(null);
 
@@ -176,32 +180,43 @@ export function AuthProvider({ children }) {
 
       let idToken = data.token || null;
       if (data.firebaseCustomToken) {
-        const credential = await signInWithCustomToken(auth, data.firebaseCustomToken);
-        idToken = await credential.user.getIdToken();
-        await api.auth.session(idToken);
+        firebaseSignInPending.current = true;
+        try {
+          const credential = await signInWithCustomToken(auth, data.firebaseCustomToken);
+          idToken = await credential.user.getIdToken();
+          await api.auth.session(idToken);
+        } finally {
+          firebaseSignInPending.current = false;
+        }
       }
 
-      persistSession(data.user, idToken);
+      persistSession(data.user, idToken, 'firebase');
       setUser(data.user);
       auditLog('login_success', { user: data.user, method: 'api' });
       trackLogin();
       return { ok: true, user: data.user };
 
     } catch (apiErr) {
-      if (!import.meta.env.DEV) {
+      if (isAuthClientError(apiErr)) {
+        auditLog('login_failed', { reason: apiErr.message });
+        return { ok: false, error: apiErr.message || 'Invalid NODE_ID or PASSKEY.' };
+      }
+
+      if (!import.meta.env.DEV || !isApiUnreachable(apiErr)) {
         auditLog('login_error', { reason: 'api_unavailable', detail: apiErr?.message });
         return {
           ok: false,
-          error: 'Unable to reach the authentication server. Please try again later.',
+          error: isApiUnreachable(apiErr)
+            ? 'Unable to reach the authentication server. Start the backend (port 4000) or try again.'
+            : (apiErr.message || 'Authentication failed.'),
         };
       }
 
-      // Dev only: optional offline login when Express is not running
       try {
         const { validateCredentials } = await import('../lib/auth');
         const result = await validateCredentials(userId, password);
         if (result.ok) {
-          persistSession(result.user, null);
+          persistSession(result.user, null, 'dev');
           setUser(result.user);
           auditLog('login_success', { user: result.user, method: 'dev_offline' });
           trackLogin();
@@ -216,24 +231,24 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // ── Logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
+    const provider = sessionAuthProvider(readSession());
     auditLog('logout', { user });
     trackLogout();
 
     stopIdleTimer();
-    broadcastLogout();   // tell other tabs
-    clearAllAuthStorage(); // wipe sessionStorage, localStorage, cookies
+    broadcastLogout();
+    clearAllAuthStorage();
     setUser(null);
     setSessionExpired(false);
     setExpiredReason(null);
 
-    // Firebase + server-side cleanup (non-blocking)
-    try { await firebaseSignOut(auth); } catch {}
-    try { await api.auth.logout(); }    catch {}
+    if (provider === 'firebase') {
+      try { await firebaseSignOut(auth); } catch {}
+    }
+    try { await api.auth.logout(); } catch { /* backend may be offline */ }
   }, [user]);
 
-  // ── Context value ─────────────────────────────────────────────────────────
   return (
     <AuthContext.Provider value={{
       user,

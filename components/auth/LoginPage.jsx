@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import WelcomeSequence from './WelcomeSequence';
+import AuthCheckScreen from './AuthCheckScreen';
 
 /* ─── Particle canvas ───────────────────────────────────── */
 function LoginCanvas() {
@@ -186,17 +187,9 @@ export default function LoginPage() {
 
   const subtitle = useTyping('IDENTITY VERIFICATION REQUIRED', 40);
 
-  // While auth context is still resolving, show nothing — prevents the login
-  // form flashing momentarily for an already-authenticated user on hard refresh.
-  if (authLoading) return null;
-
-  // Redirect if already logged in (effect fires after render, useEffect is fine)
-  // Kept as useEffect (not synchronous) to satisfy React render purity.
-
-  // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated) navigate(from, { replace: true });
-  }, [isAuthenticated, navigate, from]);
+    if (!authLoading && isAuthenticated) navigate(from, { replace: true });
+  }, [authLoading, isAuthenticated, navigate, from]);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 80);
@@ -237,6 +230,10 @@ export default function LoginPage() {
   const handleWelcomeDone = () => {
     navigate(from, { replace: true });
   };
+
+  if (authLoading) {
+    return <AuthCheckScreen message="Checking session…" />;
+  }
 
   if (showWelcome) {
     return <WelcomeSequence user={authedUser} onDone={handleWelcomeDone} />;

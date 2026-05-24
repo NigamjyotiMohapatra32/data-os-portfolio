@@ -88,13 +88,14 @@ export default function EnhancedSidebar({ activePanel, setActivePanel, onExit, o
             {activePanel === item.id && (
               <div style={{
                 position: 'absolute',
-                right: '0.5rem',
-                width: '6px',
-                height: '6px',
+                right: '0.75rem',
+                width: '7px',
+                height: '7px',
                 borderRadius: '50%',
                 background: item.color,
-                boxShadow: `0 0 10px ${item.color}`,
-                animation: 'pulse 2s infinite'
+                boxShadow: `0 0 12px ${item.color}, 0 0 4px ${item.color}`,
+                animation: 'pulseDot 2.2s infinite ease-in-out',
+                display: 'inline-block',
               }} />
             )}
           </button>
@@ -159,9 +160,9 @@ export default function EnhancedSidebar({ activePanel, setActivePanel, onExit, o
       </div>
 
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+        @keyframes pulseDot {
+          0%, 100% { transform: scale(1); opacity: 0.85; }
+          50% { transform: scale(1.35); opacity: 1; filter: brightness(1.3); }
         }
       `}</style>
     </div>

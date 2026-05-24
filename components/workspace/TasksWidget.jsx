@@ -105,15 +105,18 @@ export default function TasksWidget() {
             No tasks. Add one to get started!
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {tasks.map(task => (
               <div
                 key={task.id}
+                className="lift"
                 style={{
-                  padding: '0.75rem', borderRadius: 8,
+                  padding: '0.85rem', borderRadius: 10,
                   background: task.status === 'completed' ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${col(task.status)}30`,
+                  border: `1.5px solid ${col(task.status)}30`,
                   display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  transition: 'all 0.2s ease-in-out',
                 }}
               >
                 {/* Status cycle button */}
@@ -121,26 +124,30 @@ export default function TasksWidget() {
                   onClick={() => handleCycleStatus(task.id)}
                   title={`Status: ${task.status} — click to cycle`}
                   style={{
-                    width: 22, height: 22, borderRadius: 4, flexShrink: 0,
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
                     border: `2px solid ${col(task.status)}`,
                     background: task.status === 'completed' ? col(task.status) + '20' : 'transparent',
                     color: col(task.status), cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 11, fontWeight: 700,
+                    transition: 'all 0.2s',
                   }}
+                  onMouseEnter={(e) => { e.target.style.transform = 'scale(1.1)'; }}
+                  onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; }}
                 >
                   {task.status === 'completed' ? '✓' : task.status === 'in-progress' ? '→' : '◯'}
                 </button>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    fontSize: 12, wordBreak: 'break-word',
+                    fontSize: 13, wordBreak: 'break-word',
                     color: task.status === 'completed' ? '#94a3b8' : '#e2e8f0',
                     textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                    fontWeight: 500,
                   }}>
                     {task.title}
                   </div>
-                  <div style={{ fontSize: 10, color: col(task.status), fontFamily: "'JetBrains Mono',monospace", marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: col(task.status), fontFamily: "'JetBrains Mono',monospace", marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {task.status}
                   </div>
                 </div>
@@ -148,11 +155,14 @@ export default function TasksWidget() {
                 <button
                   onClick={() => handleDeleteTask(task.id)}
                   style={{
-                    padding: '2px 6px', borderRadius: 4, flexShrink: 0,
-                    border: '1px solid rgba(239,68,68,0.3)', background: 'transparent',
+                    padding: '3px 7px', borderRadius: 6, flexShrink: 0,
+                    border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)',
                     color: '#ef4444', cursor: 'pointer', fontSize: 10,
                     fontFamily: "'JetBrains Mono',monospace",
+                    transition: 'all 0.2s',
                   }}
+                  onMouseEnter={(e) => { e.target.style.background = 'rgba(239,68,68,0.2)'; e.target.style.color = '#fff'; }}
+                  onMouseLeave={(e) => { e.target.style.background = 'rgba(239,68,68,0.05)'; e.target.style.color = '#ef4444'; }}
                 >✕</button>
               </div>
             ))}

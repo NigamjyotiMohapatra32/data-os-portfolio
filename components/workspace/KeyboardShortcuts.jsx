@@ -8,6 +8,7 @@ const shortcuts = [
   { keys: 'Esc', description: 'Close modal' },
   { keys: '⌘⇧D', description: 'Go to ER Diagram' },
   { keys: '⌘⇧S', description: 'Go to SQL editor' },
+  { keys: '⌘⇧R', description: 'Go to resume analyzer' },
   { keys: '⌘⇧A', description: 'Go to tasks' },
   { keys: '⌘⇧N', description: 'Go to notes' },
   { keys: '⌘⇧H', description: 'Go to history' },

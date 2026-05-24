@@ -108,11 +108,10 @@ export default function EnhancedWorkspace() {
     return Math.min(100, Math.max(0, raw));
   }, [stats]);
 
-  // GA4: track panel switches
-  const handlePanelChange = (panelId) => {
+  const handlePanelChange = useCallback((panelId) => {
     setActivePanel(panelId);
     trackPanelOpen(panelId);
-  };
+  }, []);
 
   const addToast = useCallback((message, type = 'success') => {
     const id = Date.now();
@@ -148,6 +147,7 @@ export default function EnhancedWorkspace() {
     const PANEL_KEYS = {
       d: 'diagram', s: 'sql', r: 'resume', a: 'tasks', n: 'notes',
       h: 'history', x: 'snippets', b: 'dashboard', j: 'jobs',
+      m: 'admin',
     };
     const handleKeyDown = (e) => {
       const mod = e.ctrlKey || e.metaKey;
@@ -172,7 +172,7 @@ export default function EnhancedWorkspace() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handlePanelChange]);
 
   useEffect(() => {
     return () => {

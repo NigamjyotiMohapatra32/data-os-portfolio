@@ -3,13 +3,17 @@ import React, { useState, useRef, useEffect } from 'react';
 const commands = [
   { name: 'Go to ER Diagram', cmd: 'diagram', icon: '◻' },
   { name: 'Open SQL Editor', cmd: 'sql', icon: '{}' },
+  { name: 'Resume Analyzer', cmd: 'resume', icon: '🎯' },
   { name: 'View Tasks', cmd: 'tasks', icon: '✓' },
   { name: 'Open Notes', cmd: 'notes', icon: '📝' },
   { name: 'Query History', cmd: 'history', icon: '⏱' },
   { name: 'Saved Snippets', cmd: 'snippets', icon: '📌' },
   { name: 'Performance Dashboard', cmd: 'dashboard', icon: '📊' },
   { name: 'Job Hunter', cmd: 'jobs', icon: '🔍' },
+  { name: 'Admin Panel', cmd: 'admin', icon: '🔐' },
 ];
+
+const PANEL_IDS = new Set(commands.map((c) => c.cmd));
 
 export default function CommandPalette({ onClose, onPanelChange }) {
   const [input, setInput] = useState('');
@@ -30,8 +34,7 @@ export default function CommandPalette({ onClose, onPanelChange }) {
   }, [input]);
 
   const handleSelect = (cmd) => {
-    const PANEL_IDS = ['diagram', 'sql', 'tasks', 'notes', 'history', 'snippets', 'dashboard', 'jobs'];
-    if (PANEL_IDS.includes(cmd.cmd)) {
+    if (cmd && PANEL_IDS.has(cmd.cmd)) {
       onPanelChange(cmd.cmd);
     }
     onClose();
@@ -39,15 +42,17 @@ export default function CommandPalette({ onClose, onPanelChange }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') onClose();
+    if (!filtered.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelected(s => (s + 1) % filtered.length);
+      setSelected((s) => (s + 1) % filtered.length);
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelected(s => (s - 1 + filtered.length) % filtered.length);
+      setSelected((s) => (s - 1 + filtered.length) % filtered.length);
     }
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleSelect(filtered[selected]);
     }
   };

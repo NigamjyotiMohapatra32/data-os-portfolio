@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function PomodoroTimer({ onAlert }) {
+  const onAlertRef = useRef(onAlert);
+  useEffect(() => { onAlertRef.current = onAlert; }, [onAlert]);
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
   const [sessions, setSessions] = useState(0);
@@ -16,13 +18,11 @@ export default function PomodoroTimer({ onAlert }) {
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
       setSessions(prev => prev + 1);
-      if (typeof onAlert === 'function') {
-        onAlert('🎉 Pomodoro session complete! Take a break.');
-      }
+      onAlertRef.current?.('🎉 Pomodoro session complete! Take a break.');
       setTimeLeft(25 * 60);
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft, onAlert]);
+  }, [isRunning, timeLeft]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -33,13 +33,12 @@ export default function PomodoroTimer({ onAlert }) {
   };
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, rgba(255, 0, 110, 0.15) 0%, rgba(255, 0, 110, 0.05) 100%)',
-      backdropFilter: 'blur(15px)',
-      border: '1.5px solid rgba(255, 0, 110, 0.3)',
-      borderRadius: '12px',
-      padding: '1.25rem',
-      textAlign: 'center'
+    <div className="glass-premium text-center animate-pulse-slow" style={{
+      padding: '1.5rem',
+      borderRadius: '16px',
+      border: '1.5px solid rgba(255, 0, 110, 0.25)',
+      background: 'linear-gradient(135deg, rgba(255, 0, 110, 0.08) 0%, rgba(12, 19, 34, 0.6) 100%)',
+      boxShadow: '0 8px 32px rgba(255, 0, 110, 0.15)',
     }}>
       <div style={{
         fontSize: '11px',
@@ -47,7 +46,7 @@ export default function PomodoroTimer({ onAlert }) {
         color: '#94a3b8',
         marginBottom: '1rem',
         textTransform: 'uppercase',
-        letterSpacing: '0.08em'
+        letterSpacing: '0.1em'
       }}>
         🍅 Pomodoro Timer
       </div>

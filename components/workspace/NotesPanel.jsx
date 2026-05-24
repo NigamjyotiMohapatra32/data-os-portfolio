@@ -176,9 +176,9 @@ export default function NotesPanel() {
                     {note.title}
                   </div>
                   <div style={{ display:'flex', gap:4, flexShrink:0, marginLeft:4 }}>
-                    <button onClick={() => togglePin(note.id)} title={note.pinned ? 'Unpin':'Pin'} style={{ background:'none',border:'none',cursor:'pointer',fontSize:12,opacity:0.6,padding:'1px 3px' }}>{note.pinned?'📌':'📍'}</button>
-                    <button onClick={() => startEdit(note)} title="Edit" style={{ background:'rgba(167,139,250,0.15)',border:'none',color:'#a78bfa',cursor:'pointer',fontSize:11,padding:'1px 5px',borderRadius:4 }}>✏</button>
-                    <button onClick={() => deleteNote(note.id)} title="Delete" style={{ background:'rgba(239,68,68,0.15)',border:'none',color:'#ef4444',cursor:'pointer',fontSize:11,padding:'1px 5px',borderRadius:4 }}>✕</button>
+                    <button onClick={() => togglePin(note.id)} title={note.pinned ? 'Unpin':'Pin'} style={{ background:'none',border:'none',cursor:'pointer',fontSize:12,opacity:0.6,padding:'1px 3px',transition:'transform 0.2s' }} onMouseEnter={e => e.target.style.transform='scale(1.2)'} onMouseLeave={e => e.target.style.transform='scale(1)'}>{note.pinned?'📌':'📍'}</button>
+                    <button onClick={() => startEdit(note)} title="Edit" style={{ background:'rgba(167,139,250,0.15)',border:'none',color:'#a78bfa',cursor:'pointer',fontSize:11,padding:'2px 6px',borderRadius:5,transition:'all 0.2s' }} onMouseEnter={e => { e.target.style.background='rgba(167,139,250,0.3)'; }} onMouseLeave={e => { e.target.style.background='rgba(167,139,250,0.15)'; }}>✏</button>
+                    <button onClick={() => deleteNote(note.id)} title="Delete" style={{ background:'rgba(239,68,68,0.15)',border:'none',color:'#ef4444',cursor:'pointer',fontSize:11,padding:'2px 6px',borderRadius:5,transition:'all 0.2s' }} onMouseEnter={e => { e.target.style.background='rgba(239,68,68,0.3)'; }} onMouseLeave={e => { e.target.style.background='rgba(239,68,68,0.15)'; }}>✕</button>
                   </div>
                 </div>
                 {note.content && (

@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
+import BusinessAnalysis from '../components/BusinessAnalysis';
+import EnterpriseEDWPipeline from '../components/EnterpriseEDWPipeline';
 import AboutSection from '../components/AboutSection';
 import SkillsSection from '../components/SkillsSection';
+import ModelingThinkingAssistant from '../components/ModelingThinkingAssistant';
+import DataModelingShowcase from '../components/DataModelingShowcase';
+import KPIIntelligence from '../components/KPIIntelligence';
 import ProjectsSection from '../components/ProjectsSection';
 import TimelineSection from '../components/TimelineSection';
 import SQLPlayground from '../components/SQLPlayground';
@@ -66,9 +71,19 @@ export default function Portfolio() {
       <main className="relative z-10">
         <HeroSection onLaunchDataOS={launchDataOS} />
         <div className="section-divider" />
+        <BusinessAnalysis />
+        <div className="section-divider" />
+        <EnterpriseEDWPipeline />
+        <div className="section-divider" />
         <AboutSection />
         <div className="section-divider" />
         <SkillsSection />
+        <div className="section-divider" />
+        <ModelingThinkingAssistant />
+        <div className="section-divider" />
+        <DataModelingShowcase />
+        <div className="section-divider" />
+        <KPIIntelligence />
         <div className="section-divider" />
         <ProjectsSection />
         <div className="section-divider" />

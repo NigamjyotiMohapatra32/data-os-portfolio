@@ -1,14 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+const STORAGE_KEY = 'dos_workspace_history';
 const defaultHistory = [
-  { id: 1, query: 'SELECT * FROM customers WHERE status = \'active\'', timestamp: '2 mins ago', rows: 1245 },
-  { id: 2, query: 'INSERT INTO orders VALUES (...)...', timestamp: '15 mins ago', rows: 42 },
+  { id: 1, query: "SELECT * FROM customers WHERE status = 'active'", timestamp: '2 mins ago', rows: 1245 },
+  { id: 2, query: 'INSERT INTO orders VALUES (...)', timestamp: '15 mins ago', rows: 42 },
   { id: 3, query: 'UPDATE inventory SET qty = qty - 1...', timestamp: '1 hour ago', rows: 823 },
   { id: 4, query: 'DELETE FROM temp_staging...', timestamp: '3 hours ago', rows: 0 },
 ];
 
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultHistory;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : defaultHistory;
+  } catch {
+    return defaultHistory;
+  }
+}
+
 export default function QueryHistory() {
-  const [history, setHistory] = useState(defaultHistory);
+  const [history, setHistory] = useState(loadHistory);
+
+  useEffect(() => {
+    const handleReload = () => {
+      setHistory(loadHistory());
+    };
+    window.addEventListener('dosHistoryUpdated', handleReload);
+    return () => window.removeEventListener('dosHistoryUpdated', handleReload);
+  }, []);
+
+  const handleClear = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    } catch {}
+    setHistory([]);
+  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -28,7 +55,7 @@ export default function QueryHistory() {
           {history.length} queries
         </div>
         <button
-          onClick={() => setHistory([])}
+          onClick={handleClear}
           style={{
             fontSize: '11px',
             padding: '0.4rem 0.8rem',

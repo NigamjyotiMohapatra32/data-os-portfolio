@@ -47,14 +47,81 @@ export default function SQLEditor({ onQueryRun }) {
       if (!mountedRef.current) return;
       const end = performance.now();
       setExecTime(Math.round(end - start));
+
+      const normalizedCode = code.toLowerCase();
+      let dynamicCols = [];
+      let dynamicRows = [];
+
+      if (normalizedCode.includes('portfolio.engineer') || normalizedCode.includes('experience_years')) {
+        dynamicCols = ['name', 'role', 'location', 'experience_years', 'status'];
+        dynamicRows = [
+          ['Nigamjyoti Mohapatra', 'Senior Data Modeler & Architect', 'Bengaluru, India', '5+', 'ACTIVE']
+        ];
+      } else if (normalizedCode.includes('portfolio.skills') || normalizedCode.includes('skill_count')) {
+        dynamicCols = ['category', 'skill_count'];
+        dynamicRows = [
+          ['Data Modeling / Architecture', '8'],
+          ['Azure Cloud & DWH', '6'],
+          ['Databases & SQL', '7'],
+          ['Core Data Engineering', '5']
+        ];
+      } else if (normalizedCode.includes('portfolio.projects') || normalizedCode.includes('perf_improvement_pct')) {
+        dynamicCols = ['org', 'project_name', 'perf_improvement_pct', 'created_date'];
+        dynamicRows = [
+          ['EY GDS', 'Insurance DWH Star Schema', '45%', '2023-08-15'],
+          ['Publicis Sapient', 'Retail Sales OLAP Pipeline', '35%', '2024-02-10'],
+          ['Freelance', 'Data Vault 2.0 Automation', '50%', '2024-11-20']
+        ];
+      } else {
+        dynamicCols = ['query_segment', 'execution_status', 'info'];
+        dynamicRows = [
+          ['custom_sql_payload', 'SUCCESS', 'Interactive Data OS query completed successfully.']
+        ];
+      }
+
       setResult({
-        rows: [
-          ['Nigamjyoti Mohapatra', 'Data Modeler / SQL Developer', 'Bengaluru', '5'],
-        ],
-        cols: ['name', 'role', 'location', 'experience_years'],
+        rows: dynamicRows,
+        cols: dynamicCols,
       });
       setExecuting(false);
       onQueryRun?.();
+
+      // Add to query history in localStorage
+      try {
+        const historyKey = 'dos_workspace_history';
+        const rawHistory = localStorage.getItem(historyKey);
+        let historyList = [];
+        if (rawHistory) {
+          try {
+            historyList = JSON.parse(rawHistory);
+          } catch (e) {
+            historyList = [];
+          }
+        } else {
+          // Seed initial history if empty
+          historyList = [
+            { id: 1, query: "SELECT * FROM customers WHERE status = 'active'", timestamp: '2 mins ago', rows: 1245 },
+            { id: 2, query: 'INSERT INTO orders VALUES (...)', timestamp: '15 mins ago', rows: 42 },
+            { id: 3, query: 'UPDATE inventory SET qty = qty - 1...', timestamp: '1 hour ago', rows: 823 },
+            { id: 4, query: 'DELETE FROM temp_staging...', timestamp: '3 hours ago', rows: 0 },
+          ];
+        }
+
+        const newRecord = {
+          id: Date.now(),
+          query: code.trim(),
+          timestamp: 'Just now',
+          rows: dynamicRows.length,
+        };
+
+        historyList = [newRecord, ...historyList].slice(0, 50);
+        localStorage.setItem(historyKey, JSON.stringify(historyList));
+
+        // Dispatch dynamic storage event
+        window.dispatchEvent(new CustomEvent('dosHistoryUpdated'));
+      } catch (e) {
+        console.error('[History Sync Error]', e);
+      }
     }, 800);
   };
 
