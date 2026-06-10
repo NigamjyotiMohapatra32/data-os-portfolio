@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
     setSessionExpired(true);
     setExpiredReason(reason);
 
-    if (provider === 'firebase') {
+    if (provider === 'firebase' && auth) {
       try { await firebaseSignOut(auth); } catch {}
     }
     try { await api.auth.logout(); } catch { /* backend may be offline */ }
@@ -124,6 +124,7 @@ export function AuthProvider({ children }) {
 
   // Wait for Firebase to restore persisted auth before treating null as revoked.
   useEffect(() => {
+    if (!auth) return; // Firebase not configured — skip auth state listener
     let unsub = () => {};
     let cancelled = false;
 
@@ -247,7 +248,7 @@ export function AuthProvider({ children }) {
     setSessionExpired(false);
     setExpiredReason(null);
 
-    if (provider === 'firebase') {
+    if (provider === 'firebase' && auth) {
       try { await firebaseSignOut(auth); } catch {}
     }
     try { await api.auth.logout(); } catch { /* backend may be offline */ }

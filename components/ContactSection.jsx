@@ -189,13 +189,15 @@ export default function ContactSection() {
 
     try {
       try {
-        await addDoc(collection(db, 'contactSubmissions'), {
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          message: formData.message.trim(),
-          submittedAt: serverTimestamp(),
-          read: false,
-        });
+        if (db) {
+          await addDoc(collection(db, 'contactSubmissions'), {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            message: formData.message.trim(),
+            submittedAt: serverTimestamp(),
+            read: false,
+          });
+        }
       } catch (dbErr) {
         console.warn('[contact] Firestore write skipped:', dbErr.message);
       }

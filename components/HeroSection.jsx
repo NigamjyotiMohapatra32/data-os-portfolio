@@ -120,6 +120,7 @@ const StatCard = React.memo(function StatCard({ stat, delay = 0 }) {
 function useResumeDownloadCount() {
   const [count, setCount] = useState(null);
   useEffect(() => {
+    if (!db) return; // Firebase not configured
     getDoc(doc(db, 'meta', 'resumeDownloads'))
       .then((snap) => { if (snap.exists()) setCount(snap.data().count ?? 0); else setCount(0); })
       .catch(() => setCount(null));
@@ -146,8 +147,10 @@ export default function HeroSection({ onLaunchDataOS }) {
     setDownloading(true);
     try {
       // Increment download counter in Firestore
-      const ref = doc(db, 'meta', 'resumeDownloads');
-      await setDoc(ref, { count: increment(1) }, { merge: true });
+      if (db) {
+        const ref = doc(db, 'meta', 'resumeDownloads');
+        await setDoc(ref, { count: increment(1) }, { merge: true });
+      }
     } catch {
       // Non-fatal
     }

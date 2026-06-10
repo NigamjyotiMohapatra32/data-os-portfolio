@@ -15,7 +15,7 @@ function DownloadCard({ resource }) {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
-    if (resource.id !== 'resume') return;
+    if (resource.id !== 'resume' || !db) return;
     getDoc(doc(db, 'meta', 'resumeDownloads'))
       .then((snap) => setCount(snap.exists() ? (snap.data().count ?? 0) : 0))
       .catch(() => {});
@@ -25,7 +25,7 @@ function DownloadCard({ resource }) {
     if (downloading || !resource.available) return;
     setDownloading(true);
 
-    if (resource.id === 'resume') {
+    if (resource.id === 'resume' && db) {
       try {
         await setDoc(doc(db, 'meta', 'resumeDownloads'), { count: increment(1) }, { merge: true });
         setCount((c) => (c ?? 0) + 1);
