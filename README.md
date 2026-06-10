@@ -1,5 +1,13 @@
 # Data OS Portfolio - Nigamjyoti Mohapatra
 
+<p align="center">
+  <img src="public/demo-sql.gif" alt="Animated terminal running SELECT * FROM nigamjyoti.portfolio, returning data modeling roles" width="700" />
+</p>
+
+<p align="center">
+  <img src="public/demo-schema.gif" alt="Animated Kimball star schema — fact_claims surrounded by six dimensions with data pulses" width="480" />
+</p>
+
 An interactive, immersive portfolio for a Data Engineer / Data Modeler featuring a dedicated "Launch Data OS" button that opens a fully functional data workspace.
 
 ## 🚀 Features

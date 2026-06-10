@@ -11,6 +11,7 @@ import BackgroundCanvas from '../components/BackgroundCanvas';
 import CursorGlow from '../components/CursorGlow';
 import SchemaTrail from '../components/SchemaTrail';
 import ScrollQuery from '../components/ScrollQuery';
+import SkillsMarquee from '../components/SkillsMarquee';
 
 // ── Below-the-fold: lazy-loaded on scroll for smaller initial bundle ─────────
 const BusinessAnalysis = lazy(() => import('../components/BusinessAnalysis'));
@@ -83,6 +84,8 @@ export default function Portfolio() {
 
       <main className="relative z-10">
         <HeroSection onLaunchDataOS={launchDataOS} />
+
+        <SkillsMarquee />
 
         <Suspense fallback={<SectionFallback />}>
           <div className="section-divider" />
