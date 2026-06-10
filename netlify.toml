@@ -12,7 +12,7 @@
     Referrer-Policy            = "strict-origin-when-cross-origin"
     Permissions-Policy         = "camera=(), microphone=(), geolocation=(), payment=()"
     Strict-Transport-Security  = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.gstatic.com https://*.firebaseio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebasestorage.googleapis.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://*.railway.app https://*.onrender.com; frame-src 'none'; worker-src 'self' blob:;"
+    Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.gstatic.com https://*.firebaseio.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebasestorage.googleapis.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://*.railway.app https://*.onrender.com; media-src 'self' https://assets.mixkit.co; frame-src 'none'; worker-src 'self' blob:;"
 
 # ── Cache: immutable hashed assets (Vite fingerprints JS/CSS) ───────────────
 [[headers]]

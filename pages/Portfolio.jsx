@@ -68,7 +68,7 @@ export default function Portfolio() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'cyber' ? 'cyber' : ''}`} style={{ '--bg': '#06080f' }}>
+    <div className={`min-h-screen bg-aurora ${theme === 'cyber' ? 'cyber' : ''}`} style={{ '--bg': '#06080f' }}>
       {showBoot && <BootScreen onSkip={handleSkipBoot} />}
       <BackgroundCanvas />
       <CursorGlow />

@@ -567,3 +567,177 @@ body {
   max-width: 900px;
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   SIGNATURE DESIGN SYSTEM — brand-unique treatments
+   Tokens → glow → CTA → hover → dividers → background → a11y
+   All animations use transform/opacity only (GPU-composited).
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --glow-sm: 0 0 12px -2px;
+  --glow-md: 0 0 28px -6px;
+  --glow-lg: 0 0 60px -12px;
+  --ease-sig: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Signature section divider: gradient rail + centred node ("data bus").
+   Upgrades every existing .section-divider with zero markup changes. */
+.section-divider::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--bg);
+  border: 1px solid rgba(34,211,238,0.55);
+  box-shadow: var(--glow-sm) rgba(34,211,238,0.6);
+}
+
+.section-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 1px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.6), transparent);
+}
+
+.section-divider { position: relative; }
+
+/* Signature CTA: light sweep on hover + tactile press, inherited by every .btn */
+.btn { position: relative; overflow: hidden; }
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.10), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s var(--ease-sig);
+  pointer-events: none;
+}
+
+.btn:hover::after { left: 130%; }
+.btn:active { transform: translateY(1px) scale(0.98); }
+
+/* Signature hover: cursor spotlight (driven by --mx/--my from JS) */
+.spotlight { position: relative; }
+
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(34,211,238,0.08), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-sig);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spotlight:hover::before { opacity: 1; }
+
+/* Signature background: two aurora fields drifting on transform only */
+.bg-aurora { position: relative; }
+
+.bg-aurora::before,
+.bg-aurora::after {
+  content: '';
+  position: fixed;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.bg-aurora::before {
+  top: -25vw;
+  left: -15vw;
+  background: radial-gradient(circle, rgba(34,211,238,0.07), transparent 60%);
+  animation: auroraDriftA 26s ease-in-out infinite alternate;
+}
+
+.bg-aurora::after {
+  bottom: -25vw;
+  right: -15vw;
+  background: radial-gradient(circle, rgba(167,139,250,0.07), transparent 60%);
+  animation: auroraDriftB 32s ease-in-out infinite alternate;
+}
+
+@keyframes auroraDriftA {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+}
+
+@keyframes auroraDriftB {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to   { transform: translate3d(-7vw, -5vh, 0) scale(0.95); }
+}
+
+/* Signature text reveal: headline lines rise from a clipped edge */
+@keyframes lineRise {
+  from { transform: translateY(110%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.line-reveal { display: block; overflow: hidden; }
+
+.line-reveal > span {
+  display: block;
+  animation: lineRise 0.85s var(--ease-sig) both;
+}
+
+.line-reveal:nth-child(2) > span { animation-delay: 0.12s; }
+
+/* Accessibility: one consistent keyboard-focus ring everywhere */
+:focus-visible {
+  outline: 2px solid var(--c-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+a:focus-visible,
+button:focus-visible {
+  box-shadow: var(--glow-sm) rgba(34,211,238,0.7);
+}
+
+/* Accessibility: vestibular-safe reduced motion (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .scan-line,
+  .bg-aurora::before,
+  .bg-aurora::after,
+  .float,
+  .shimmer,
+  .dot,
+  .dot-ping::after,
+  .flow-line,
+  .animated-gradient-text {
+    animation: none !important;
+  }
+
+  .line-reveal > span {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+
+  .reveal,
+  .lift,
+  .tilt-card,
+  .chip {
+    transition-duration: 0.01ms !important;
+  }
+}

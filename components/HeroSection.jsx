@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { db } from '../lib/firebase';
 import { doc, getDoc, increment, setDoc } from 'firebase/firestore';
 import { useResumeUrl } from '../lib/useSiteConfig';
+import { useMagnetic, useSpotlight } from '../lib/interactions';
 import SectionVideoBackground from './SectionVideoBackground';
 
 const ROLES = [
@@ -126,9 +127,16 @@ function useResumeDownloadCount() {
   return count;
 }
 
+/** Magnetic wrapper — signature hover for primary CTAs. */
+function Magnetic({ children }) {
+  const ref = useMagnetic(0.22, 7);
+  return <span ref={ref} style={{ display: 'inline-block' }}>{children}</span>;
+}
+
 export default function HeroSection({ onLaunchDataOS }) {
   const role = useTypewriter(ROLES);
   const statsRef = useRef(null);
+  const dagRef = useSpotlight();
   const [downloading, setDownloading] = useState(false);
   const downloadCount = useResumeDownloadCount();
   const { url: RESUME_URL } = useResumeUrl();
@@ -191,13 +199,13 @@ export default function HeroSection({ onLaunchDataOS }) {
             className="font-mono text-xs text-cyan-400 mb-2.5 uppercase tracking-widest font-bold block"
             style={{ textShadow: '0 0 10px rgba(34,211,238,0.35)' }}
           >
-            🚀 Enterprise Data Warehouse Architecture Reimagined
+            <span className="text-violet-400">$</span> Enterprise Data Warehouse Architecture Reimagined
           </motion.div>
 
           {/* Name */}
           <h1 className="font-display font-bold leading-[0.95] tracking-tight text-5xl md:text-7xl lg:text-[5.5rem]">
-            <span className="block text-slate-100">Nigamjyoti</span>
-            <span className="block grad-text">Mohapatra</span>
+            <span className="line-reveal"><span className="text-slate-100">Nigamjyoti</span></span>
+            <span className="line-reveal"><span className="grad-text">Mohapatra</span></span>
           </h1>
 
           {/* Typewriter role */}
@@ -220,22 +228,26 @@ export default function HeroSection({ onLaunchDataOS }) {
 
           {/* CTA buttons */}
           <div className="mt-8 flex flex-wrap gap-3">
-            <motion.a
-              href="#projects"
-              className="btn btn-cyan"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              ▶ explore_pipelines()
-            </motion.a>
-            <motion.a
-              href="#contact"
-              className="btn btn-lime"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              ↗ open_connection()
-            </motion.a>
+            <Magnetic>
+              <motion.a
+                href="#projects"
+                className="btn btn-cyan"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                ▶ explore_pipelines()
+              </motion.a>
+            </Magnetic>
+            <Magnetic>
+              <motion.a
+                href="#contact"
+                className="btn btn-lime"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                ↗ open_connection()
+              </motion.a>
+            </Magnetic>
             <motion.button
               onClick={handleResumeDownload}
               disabled={downloading}
@@ -295,7 +307,7 @@ export default function HeroSection({ onLaunchDataOS }) {
 
         {/* ── Right Column — DAG Diagram ───────────────────── */}
         <div className="lg:col-span-5">
-          <div className="glass rounded-2xl p-5 relative overflow-hidden">
+          <div ref={dagRef} className="glass spotlight rounded-2xl p-5 relative overflow-hidden">
             {/* Window chrome */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 font-mono text-[11px] text-slate-500">
