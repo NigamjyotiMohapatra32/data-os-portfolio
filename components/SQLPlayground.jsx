@@ -13,10 +13,10 @@ export default function SQLPlayground() {
         </header>
         <div className="glass rounded-2xl p-6">
           <div className="font-mono text-sm text-slate-400 mb-4">
-            SELECT * FROM portfolio WHERE passion = 'data_modeling';
+            SELECT * FROM portfolio WHERE passion = &apos;data_modeling&apos;;
           </div>
           <div className="text-slate-300">
-            <p>Interactive SQL queries against my portfolio data. Click "Launch Data OS" to access the full SQL editor with real execution capabilities.</p>
+            <p>Interactive SQL queries against my portfolio data. Click &quot;Launch Data OS&quot; to access the full SQL editor with real execution capabilities.</p>
           </div>
         </div>
       </div>

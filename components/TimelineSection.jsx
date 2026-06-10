@@ -68,7 +68,7 @@ const TIMELINE = [
   },
 ];
 
-function TimelineItem({ item, idx, visible }) {
+function TimelineItem({ item, idx, _visible }) {
   const isRight = idx % 2 === 0;
 
   return (

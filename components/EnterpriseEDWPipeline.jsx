@@ -233,7 +233,7 @@ export default function EnterpriseEDWPipeline() {
             </div>
 
             {/* Steps buttons */}
-            {PIPELINE_STEPS.map((step, idx) => {
+            {PIPELINE_STEPS.map((step, _idx) => {
               const isActive = step.id === activeStep;
               return (
                 <button

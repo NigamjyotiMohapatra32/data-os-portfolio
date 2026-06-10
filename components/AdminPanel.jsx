@@ -6,7 +6,7 @@ import {
   ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject, getMetadata,
 } from 'firebase/storage';
 import {
-  collection, getDocs, orderBy, query, deleteDoc, doc, getDoc, updateDoc, setDoc, serverTimestamp,
+  collection, getDocs, orderBy, query, deleteDoc, doc, getDoc, updateDoc,
 } from 'firebase/firestore';
 import { saveSiteConfig } from '../lib/useSiteConfig';
 
@@ -1166,7 +1166,7 @@ export default function AdminPanel() {
                 )}
 
                 <div className="font-mono text-[10px] text-slate-600 pt-2">
-                  {files.length} file{files.length !== 1 ? 's' : ''} · To update resume on portfolio: click "Set as Resume" on any PDF
+                  {files.length} file{files.length !== 1 ? 's' : ''} · To update resume on portfolio: click &quot;Set as Resume&quot; on any PDF
                 </div>
               </div>
             )}

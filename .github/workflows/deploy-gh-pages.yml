@@ -48,6 +48,9 @@ jobs:
           VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
           VITE_EMAILJS_TEMPLATE_ID: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
           VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
+          # Offline login gate (no backend on GH Pages) — sha256 hex of NODE_ID / PASSKEY
+          VITE_DEV_AUTH_USER_HASH: ${{ secrets.VITE_DEV_AUTH_USER_HASH }}
+          VITE_DEV_AUTH_PASSWORD_HASH: ${{ secrets.VITE_DEV_AUTH_PASSWORD_HASH }}
 
       # Copy index.html → 404.html so the GH-Pages 404 handler is overridden
       # by our own SPA redirect (public/404.html was already copied by Vite)

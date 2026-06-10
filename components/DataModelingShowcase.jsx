@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionVideoBackground from './SectionVideoBackground';
 
@@ -497,7 +497,7 @@ export default function DataModelingShowcase() {
                 </motion.button>
 
                 {/* Spawned library tables nodes */}
-                {spawnedTables.map((sTable, idx) => (
+                {spawnedTables.map((sTable, _idx) => (
                   <motion.button
                     key={sTable.id}
                     onClick={() => setSelectedTable(sTable.id)}
@@ -660,7 +660,7 @@ export default function DataModelingShowcase() {
             </div>
             {/* SCD Type selectors */}
             <div className="flex flex-wrap gap-2">
-              {Object.entries(SCD_OVERVIEW).map(([key, item]) => (
+              {Object.entries(SCD_OVERVIEW).map(([key, _item]) => (
                 <button
                   key={key}
                   onClick={() => { setScdType(key); setScdStep('before'); }}
@@ -1038,7 +1038,7 @@ export default function DataModelingShowcase() {
                     </button>
 
                     {/* Spawned tables inside immersive canvas */}
-                    {spawnedTables.map((sTable, idx) => (
+                    {spawnedTables.map((sTable, _idx) => (
                       <button
                         key={sTable.id}
                         onClick={() => setSelectedTable(sTable.id)}

@@ -26,6 +26,7 @@ export default defineConfig({
     target: 'esnext',
     minify: 'oxc',
     sourcemap: false,
+    cssCodeSplit: true,
     chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
@@ -34,10 +35,7 @@ export default defineConfig({
           if (/[\\/]node_modules[\\/](react|react-dom|react-router-dom)[\\/]/.test(id)) {
             return 'vendor-react';
           }
-          if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) {
-            return 'vendor-three';
-          }
-          if (/[\\/]node_modules[\\/](framer-motion|gsap)[\\/]/.test(id)) {
+          if (/[\\/]node_modules[\\/]framer-motion[\\/]/.test(id)) {
             return 'vendor-animation';
           }
           if (/[\\/]node_modules[\\/]firebase[\\/]/.test(id)) {

@@ -1,22 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// ── Above-the-fold: eagerly loaded for instant FCP ───────────────────────────
 import HeroSection from '../components/HeroSection';
-import BusinessAnalysis from '../components/BusinessAnalysis';
-import EnterpriseEDWPipeline from '../components/EnterpriseEDWPipeline';
 import AboutSection from '../components/AboutSection';
 import SkillsSection from '../components/SkillsSection';
-import ModelingThinkingAssistant from '../components/ModelingThinkingAssistant';
-import DataModelingShowcase from '../components/DataModelingShowcase';
-import KPIIntelligence from '../components/KPIIntelligence';
-import ProjectsSection from '../components/ProjectsSection';
-import TimelineSection from '../components/TimelineSection';
-import SQLPlayground from '../components/SQLPlayground';
-import ResumeSection from '../components/ResumeSection';
-import ContactSection from '../components/ContactSection';
 import Navigation from '../components/Navigation';
 import BootScreen from '../components/BootScreen';
 import BackgroundCanvas from '../components/BackgroundCanvas';
 import CursorGlow from '../components/CursorGlow';
+
+// ── Below-the-fold: lazy-loaded on scroll for smaller initial bundle ─────────
+const BusinessAnalysis = lazy(() => import('../components/BusinessAnalysis'));
+const EnterpriseEDWPipeline = lazy(() => import('../components/EnterpriseEDWPipeline'));
+const ModelingThinkingAssistant = lazy(() => import('../components/ModelingThinkingAssistant'));
+const DataModelingShowcase = lazy(() => import('../components/DataModelingShowcase'));
+const KPIIntelligence = lazy(() => import('../components/KPIIntelligence'));
+const ProjectsSection = lazy(() => import('../components/ProjectsSection'));
+const TimelineSection = lazy(() => import('../components/TimelineSection'));
+const SQLPlayground = lazy(() => import('../components/SQLPlayground'));
+const ResumeSection = lazy(() => import('../components/ResumeSection'));
+const ContactSection = lazy(() => import('../components/ContactSection'));
+
+/** Minimal placeholder while lazy sections load — matches site background. */
+function SectionFallback() {
+  return <div className="min-h-[200px]" aria-hidden="true" />;
+}
 
 export default function Portfolio() {
   const [showBoot, setShowBoot] = useState(true);
@@ -70,30 +79,37 @@ export default function Portfolio() {
 
       <main className="relative z-10">
         <HeroSection onLaunchDataOS={launchDataOS} />
-        <div className="section-divider" />
-        <BusinessAnalysis />
-        <div className="section-divider" />
-        <EnterpriseEDWPipeline />
+
+        <Suspense fallback={<SectionFallback />}>
+          <div className="section-divider" />
+          <BusinessAnalysis />
+          <div className="section-divider" />
+          <EnterpriseEDWPipeline />
+        </Suspense>
+
         <div className="section-divider" />
         <AboutSection />
         <div className="section-divider" />
         <SkillsSection />
-        <div className="section-divider" />
-        <ModelingThinkingAssistant />
-        <div className="section-divider" />
-        <DataModelingShowcase />
-        <div className="section-divider" />
-        <KPIIntelligence />
-        <div className="section-divider" />
-        <ProjectsSection />
-        <div className="section-divider" />
-        <TimelineSection />
-        <div className="section-divider" />
-        <ResumeSection />
-        <div className="section-divider" />
-        <SQLPlayground />
-        <div className="section-divider" />
-        <ContactSection />
+
+        <Suspense fallback={<SectionFallback />}>
+          <div className="section-divider" />
+          <ModelingThinkingAssistant />
+          <div className="section-divider" />
+          <DataModelingShowcase />
+          <div className="section-divider" />
+          <KPIIntelligence />
+          <div className="section-divider" />
+          <ProjectsSection />
+          <div className="section-divider" />
+          <TimelineSection />
+          <div className="section-divider" />
+          <ResumeSection />
+          <div className="section-divider" />
+          <SQLPlayground />
+          <div className="section-divider" />
+          <ContactSection />
+        </Suspense>
       </main>
 
       {/* Footer */}

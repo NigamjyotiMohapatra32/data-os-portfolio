@@ -51,7 +51,8 @@ export default function WelcomeSequence({ user, onDone }) {
     const done = setTimeout(() => onDone(), 5800);
     timers.current.push(done);
 
-    return () => timers.current.forEach(clearTimeout);
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

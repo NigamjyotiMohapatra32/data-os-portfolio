@@ -384,7 +384,7 @@ function ResumeAI(){
       <div style={{fontSize:22}}>{todayP.icon}</div>
       <div style={{flex:1}}>
         <div style={{fontSize:10,color:todayP.color,fontFamily:"'JetBrains Mono',monospace",textTransform:'uppercase',marginBottom:2}}>
-          📅 Today's Active Resume — {new Date().toLocaleDateString('en-US',{weekday:'long'})}
+          📅 Today&apos;s Active Resume — {new Date().toLocaleDateString('en-US',{weekday:'long'})}
         </div>
         <div style={{fontSize:12,fontWeight:700,color:'#e2e8f0'}}>{todayP.type}</div>
         <div style={{fontSize:10,color:'#64748b',marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{todayRot.note}</div>
@@ -431,7 +431,7 @@ function InterviewPrep(){
 }
 
 // ── Scheduler Guide ───────────────────────────────────────────────
-function SchedulerGuide({query,loc,savedJobs,safeMode,onSafeModeToggle}){
+function SchedulerGuide({query,loc,_savedJobs,safeMode,onSafeModeToggle}){
   const [mode,setMode]=React.useState('afternoon');
   const [running,setRunning]=React.useState(false);
   const [log,setLog]=React.useState([]);
@@ -1014,6 +1014,7 @@ export default function JobHunter(){
     finally{if(requestId===searchRequestRef.current)setLoading(false);}
   },[query,loc,matchMode,sortBy]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- initial fetch on mount only; later searches are user-triggered
   useEffect(()=>{fetchJobs(query);},[]);
 
   const handleSave=j=>{

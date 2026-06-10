@@ -190,7 +190,7 @@ export default function ModelingThinkingAssistant() {
                 <div className="p-4 rounded-xl bg-white/2 border border-white/5 space-y-1">
                   <span className="font-mono text-[9px] text-slate-500 uppercase block tracking-wider">Critical Design Question</span>
                   <p className="text-slate-200 text-sm md:text-base font-semibold leading-relaxed">
-                    💡 "{activeStep.question}"
+                    💡 &quot;{activeStep.question}&quot;
                   </p>
                 </div>
 

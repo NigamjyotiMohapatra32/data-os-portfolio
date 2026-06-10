@@ -61,7 +61,7 @@ const CERTS = [
 ];
 
 export default function AboutSection() {
-  const [secRef, secVisible] = useReveal();
+  const [secRef, _secVisible] = useReveal();
 
   return (
     <section
@@ -104,7 +104,7 @@ export default function AboutSection() {
               </div>
 
               <p className="text-slate-300 leading-relaxed text-sm md:text-base">
-                I'm a <span className="text-cyan-300 font-semibold">Data Modeler / SQL Developer</span> with
+                I&apos;m a <span className="text-cyan-300 font-semibold">Data Modeler / SQL Developer</span> with
                 <span className="text-slate-100"> 5 years</span> of experience designing and delivering enterprise
                 data warehouse solutions across insurance, retail/CPG, and vendor reporting domains.
               </p>

@@ -202,18 +202,22 @@ export function AuthProvider({ children }) {
         return { ok: false, error: apiErr.message || 'Invalid NODE_ID or PASSKEY.' };
       }
 
-      if (!import.meta.env.DEV || !isApiUnreachable(apiErr)) {
-        auditLog('login_error', { reason: 'api_unavailable', detail: apiErr?.message });
-        return {
-          ok: false,
-          error: isApiUnreachable(apiErr)
-            ? 'Unable to reach the authentication server. Start the backend (port 4000) or try again.'
-            : (apiErr.message || 'Authentication failed.'),
-        };
+      if (!isApiUnreachable(apiErr)) {
+        auditLog('login_error', { reason: 'api_error', detail: apiErr?.message });
+        return { ok: false, error: apiErr.message || 'Authentication failed.' };
       }
 
+      // API unreachable — no deployed backend (static host), backend down, or
+      // network failure. Fall back to the offline hash gate when configured.
       try {
-        const { validateCredentials } = await import('../lib/auth');
+        const { validateCredentials, isDevAuthConfigured } = await import('../lib/auth');
+        if (!isDevAuthConfigured()) {
+          auditLog('login_error', { reason: 'api_unavailable', detail: apiErr?.message });
+          return {
+            ok: false,
+            error: 'Unable to reach the authentication server. Start the backend (port 4000) or set VITE_DEV_AUTH_* at build time for offline login.',
+          };
+        }
         const result = await validateCredentials(userId, password);
         if (result.ok) {
           persistSession(result.user, null, 'dev');

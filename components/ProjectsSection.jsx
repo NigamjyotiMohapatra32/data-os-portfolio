@@ -109,7 +109,7 @@ const PROJECTS = [
   },
 ];
 
-function ProjectCard({ project, visible, delay }) {
+function ProjectCard({ project, _visible, delay }) {
   const [expanded, setExpanded] = useState(false);
 
   return (

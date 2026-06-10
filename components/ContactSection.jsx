@@ -280,7 +280,7 @@ export default function ContactSection() {
           </div>
 
           <h2 className="font-display font-bold text-4xl md:text-6xl leading-[1.05] mb-4">
-            <span className="text-slate-100">Let's </span>
+            <span className="text-slate-100">Let&apos;s </span>
             <span className="animated-gradient-text">Connect</span>
           </h2>
 
@@ -293,7 +293,7 @@ export default function ContactSection() {
 
           <p className="text-slate-400 text-base max-w-lg leading-relaxed">
             Open to exciting roles in data modeling, DWH architecture, and analytics engineering.
-            <span className="text-cyan-300"> Let's build something great together.</span>
+            <span className="text-cyan-300"> Let&apos;s build something great together.</span>
           </p>
         </motion.div>
 
@@ -448,7 +448,7 @@ export default function ContactSection() {
                     </motion.div>
                     <div>
                       <div className="font-display font-bold text-xl text-emerald-400 mb-2">Message Sent!</div>
-                      <div className="font-mono text-sm text-slate-400">I'll get back to you within 24 hours.</div>
+                      <div className="font-mono text-sm text-slate-400">I&apos;ll get back to you within 24 hours.</div>
                     </div>
                     <motion.div animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 2, repeat: Infinity }}
                       className="flex items-center gap-2 px-4 py-2 rounded-full"

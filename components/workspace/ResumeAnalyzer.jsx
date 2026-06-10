@@ -63,7 +63,7 @@ function SkillPill({ label }) {
   );
 }
 
-function CategoryBar({ cat, skills, color }) {
+function CategoryBar({ cat, skills, _color }) {
   const meta = CATEGORY_META[cat] || { label: cat, color: '#94a3b8', icon: '•' };
   const pct = Math.min(100, Math.round((skills.length / 8) * 100));
 

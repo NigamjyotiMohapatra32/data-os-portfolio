@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../lib/firebase';
-import { doc, getDoc, updateDoc, increment, setDoc } from 'firebase/firestore';
+import { doc, getDoc, increment, setDoc } from 'firebase/firestore';
 import { useResumeUrl } from '../lib/useSiteConfig';
 import SectionVideoBackground from './SectionVideoBackground';
 
@@ -156,7 +156,7 @@ export default function HeroSection({ onLaunchDataOS }) {
       window.location.href = '#contact';
     }
     setTimeout(() => setDownloading(false), 2000);
-  }, [downloading]);
+  }, [downloading, RESUME_URL]);
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center pt-20 pb-16 px-4 md:px-8 overflow-hidden">
@@ -202,7 +202,7 @@ export default function HeroSection({ onLaunchDataOS }) {
 
           {/* Typewriter role */}
           <div className="mt-5 h-8 flex items-center gap-2 font-mono text-base md:text-lg">
-            <span className="text-cyan-300 text-sm">//</span>
+            <span className="text-cyan-300 text-sm">{'//'}</span>
             <span className="text-slate-200">{role}</span>
             <span className="inline-block w-0.5 h-5 bg-cyan-300 animate-[blink_1s_step-end_infinite]" />
           </div>

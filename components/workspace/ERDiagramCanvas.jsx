@@ -11,7 +11,7 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 3;
 const HISTORY_LIMIT = 50;
 const RIGHT_PANEL_DEFAULT = 300;
-const ENTITY_W_CDM = 220;
+const _ENTITY_W_CDM = 220;
 
 // ─── Enterprise Layer + Stereotype Config ───────────────────────────────────
 const LAYER_CONFIG = {
@@ -823,7 +823,7 @@ const TEMPLATES = {
 
 
 // ─── Subject Area Layer ──────────────────────────────────────────────────────
-function SubjectAreaLayer({ areas, selectedArea, onSelect, onDragArea }) {
+function SubjectAreaLayer({ areas, selectedArea, onSelect, _onDragArea }) {
   if (!areas || !areas.length) return null;
   return (
     <g>
@@ -875,7 +875,7 @@ function ModelLayerBadge({ layer, notation }) {
 }
 
 // ─── Notation Legend ──────────────────────────────────────────────────────────
-function NotationLegend({ notation, layer }) {
+function NotationLegend({ notation, _layer }) {
   const items = notation === 'crowfoot' ? [
     { sym:'─|──', desc:'One (mandatory)' },
     { sym:'─o──', desc:'Zero or one' },
@@ -983,7 +983,7 @@ function RelationshipLayer({ entities, rels, selectedRel, onSelectRel,
   );
 }
 
-function EntityCard({ entity, isSelected, isMultiSelected, onMouseDown, onDoubleClick,
+function EntityCardBase({ entity, isSelected, isMultiSelected, onMouseDown, onDoubleClick,
                       onConnectStart, onContextMenu, modelLayer }) {
   const h = entityH(entity);
   const typeColor = { INT:'#60a5fa',VARCHAR:'#34d399',DECIMAL:'#fbbf24',TIMESTAMP:'#a78bfa',
@@ -1137,7 +1137,7 @@ function EntityCard({ entity, isSelected, isMultiSelected, onMouseDown, onDouble
     </g>
   );
 }
-EntityCard = React.memo(EntityCard);
+const EntityCard = React.memo(EntityCardBase);
 
 // ─── MiniMap ──────────────────────────────────────────────────────────────────
 function MiniMap({ entities, viewport, canvasW, canvasH }) {
@@ -1181,7 +1181,7 @@ function MiniMap({ entities, viewport, canvasW, canvasH }) {
 
 // ─── Properties Panel (tabbed: Columns | Indexes | Details | Relationships) ───
 function PropertiesPanel({ entity, rels, entities, onUpdate, onAddCol, onDelCol, onUpdateCol,
-                           onDeleteEntity, onAddRel, onDeleteRel, dialect, setDialect }) {
+                           onDeleteEntity, _onAddRel, onDeleteRel, _dialect, _setDialect }) {
   const [tab, setTab] = React.useState('cols');
   const [editingName, setEditingName] = React.useState(false);
   const [nameVal, setNameVal] = React.useState(entity?.name || '');
@@ -1195,6 +1195,7 @@ function PropertiesPanel({ entity, rels, entities, onUpdate, onAddCol, onDelCol,
     setNameVal(entity?.name || '');
     setEditingName(false);
     setTab('cols');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset local edit state only when a different entity is selected
   }, [entity?.id]);
 
   const inp = {
@@ -1633,7 +1634,7 @@ function ValidationPanel({ entities, rels }) {
 }
 
 // ─── AI Copilot Panel ─────────────────────────────────────────────────────────
-function AIPanel({ entities, onApplySuggestion }) {
+function AIPanel({ entities, _onApplySuggestion }) {
   const [mode, setMode] = React.useState('analyze');
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -1764,6 +1765,7 @@ function AIPanel({ entities, onApplySuggestion }) {
 // ─── Relationship Properties Panel ──────────────────────────────────────────
 function RelationshipPanel({ rel, entities, onUpdate, onDelete }) {
   const [lbl, setLbl] = useState(rel?.label || '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reset label draft only when a different relationship is selected
   useEffect(() => { setLbl(rel?.label || ''); }, [rel?.id]);
   const fromEnt = entities.find(e => e.id === rel?.fromId);
   const toEnt   = entities.find(e => e.id === rel?.toId);
@@ -1998,7 +2000,7 @@ function ContextMenu({ x, y, items, onClose }) {
 }
 
 // ─── Toolbar (top) ─────────────────────────────────────────────────────────────
-function TopToolbar({ tool, setTool, onNew, onTemplate, onUndo, onRedo, onFitView, onExportPNG,
+function TopToolbar({ _tool, _setTool, onNew, onTemplate, onUndo, onRedo, onFitView, onExportPNG,
                       onExportSVG, onExportJSON, onImportJSON, onToggleFullscreen, isFullscreen,
                       zoom, canUndo, canRedo,
                       dialect, setDialect, onValidate, onAutoLayout,
@@ -2259,7 +2261,7 @@ export default function ERDiagramCanvas({ onEntityCountChange }) {
   const [clipboard,    setClipboard]    = useState([]);
   const [modelLayer, setModelLayer]       = useState('PDM');
   const [notation,   setNotation]         = useState('crowfoot');
-  const [subjectAreas, setSubjectAreas]   = useState([]);
+  const [subjectAreas, _setSubjectAreas]   = useState([]);
   const [showNotationLegend, setShowNotationLegend] = useState(false);
 
   const svgRef       = useRef(null);
@@ -2564,7 +2566,7 @@ export default function ERDiagramCanvas({ onEntityCountChange }) {
     mutateRels(prev => prev.map(r => r.id === id ? {...r, ...patch} : r));
   }, [mutateRels]);
 
-  const addMMBridgeTable = useCallback((fromId, toId, opts) => {
+  const addMMBridgeTable = useCallback((fromId, toId, _opts) => {
     const fromEnt = entitiesRef.current.find(e => e.id === fromId);
     const toEnt   = entitiesRef.current.find(e => e.id === toId);
     if (!fromEnt || !toEnt) return;
@@ -2926,14 +2928,14 @@ export default function ERDiagramCanvas({ onEntityCountChange }) {
       'separator',
       { icon: '🗑',  label: 'Delete Table', danger: true, action: () => deleteEntity(entityId) },
     ]});
-  }, [pushHistory, deleteEntity, showStatus]);
+  }, [pushHistory, deleteEntity, showStatus, updateEntity]);
 
   const onRelContextMenu = useCallback((e, relId) => {
     e.preventDefault(); e.stopPropagation();
     const rel     = relsRef.current.find(r => r.id === relId);
     if (!rel) return;
-    const fromEnt = entitiesRef.current.find(en => en.id === rel.fromId);
-    const toEnt   = entitiesRef.current.find(en => en.id === rel.toId);
+    const _fromEnt = entitiesRef.current.find(en => en.id === rel.fromId);
+    const _toEnt   = entitiesRef.current.find(en => en.id === rel.toId);
     setContextMenu({ x: e.clientX, y: e.clientY, items: [
       { icon:'✏️', label:'Edit Relationship', action:() => {
         setSelectedRel(relId); setSelectedId(null); setSelectedIds([]); setRightTab('props');

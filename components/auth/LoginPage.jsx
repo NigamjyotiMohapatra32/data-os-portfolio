@@ -417,7 +417,7 @@ export default function LoginPage() {
               disabled={loading}
               style={{
                 width:'100%', padding:'14px',
-                borderRadius:'10px', border:'none', cursor: loading ? 'not-allowed' : 'pointer',
+                borderRadius:'10px', cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily:"'JetBrains Mono',monospace", fontWeight:700, fontSize:'13px',
                 letterSpacing:'0.12em', textTransform:'uppercase',
                 background: loading

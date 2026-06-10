@@ -301,7 +301,7 @@ export default function SQLEditor({ onQueryRun }) {
             fontSize: '13px',
             fontFamily: "'JetBrains Mono', monospace"
           }}>
-            Click "Run Query" to execute
+            Click &quot;Run Query&quot; to execute
           </div>
         )}
       </div>
