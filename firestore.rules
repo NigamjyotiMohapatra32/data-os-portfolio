@@ -6,6 +6,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Admin = authenticated via the backend-minted custom token, which
+    // carries { role: 'admin' }. Anonymous/other sign-ins do NOT qualify.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == 'admin';
+    }
+
     function ownsUserDoc(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -16,12 +22,12 @@ service cloud.firestore {
 
     match /pageVisits/{visitId} {
       allow create: if true;
-      allow read, update, delete: if signedIn();
+      allow read, update, delete: if isAdmin();
     }
 
     match /uiEvents/{eventId} {
       allow create: if true;
-      allow read, update, delete: if signedIn();
+      allow read, update, delete: if isAdmin();
     }
 
     // Contact form submissions — anyone can create, signed-in users can read/update/delete
@@ -34,9 +40,9 @@ service cloud.firestore {
         request.resource.data.message is string &&
         request.resource.data.message.size() >= 10 &&
         request.resource.data.message.size() <= 2000;
-      allow read, delete: if signedIn();
+      allow read, delete: if isAdmin();
       // Allow admin to update the read flag
-      allow update: if signedIn();
+      allow update: if isAdmin();
     }
 
     // meta/resumeDownloads — public read, public increment-only update
@@ -48,10 +54,10 @@ service cloud.firestore {
         request.resource.data.count == resource.data.count + 1;
     }
 
-    // meta/siteConfig — public read, signed-in write (admin sets resumeUrl etc.)
+    // meta/siteConfig — public read, admin-only write (resumeUrl etc.)
     match /meta/siteConfig {
       allow read: if true;
-      allow write: if signedIn();
+      allow write: if isAdmin();
     }
   }
 }

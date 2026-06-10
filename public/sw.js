@@ -3,12 +3,15 @@
  * Strategy: network-first for API/Firebase, cache-first for static assets
  */
 
-const CACHE = 'data-os-v2';
-const OFFLINE_URL = '/offline.html';
+const CACHE = 'data-os-v3';
+// Resolve against the SW's own location so the same file works at the domain
+// root (Netlify) and under a subpath (GitHub Pages /data-os-portfolio/).
+const BASE = new URL('./', self.location).pathname;
+const OFFLINE_URL = BASE + 'offline.html';
 
 const STATIC_ASSETS = [
-  '/',
-  '/offline.html',
+  BASE,
+  OFFLINE_URL,
 ];
 
 // ── Install ──────────────────────────────────────────────────────────────────
@@ -63,7 +66,7 @@ self.addEventListener('fetch', (e) => {
   if (request.mode === 'navigate') {
     e.respondWith(
       fetch(request).catch(() =>
-        caches.match(OFFLINE_URL) || caches.match('/')
+        caches.match(OFFLINE_URL) || caches.match(BASE)
       )
     );
     return;

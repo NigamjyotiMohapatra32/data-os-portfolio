@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /workspace
+Disallow: /login
+
+Sitemap: https://nigamjyotimohapatra32.github.io/data-os-portfolio/sitemap.xml

@@ -10,20 +10,23 @@
     "check": "node --check src/index.js && node --check src/config/firebase.js && node --check src/middleware/auth.js && node --check src/middleware/rateLimit.js && node --check src/routes/auth.js && node --check src/routes/jobs.js && node --check src/routes/notes.js && node --check src/routes/contact.js && node --check src/routes/analytics.js && node --check src/services/jobSearch.js && node --check src/utils/userDoc.js"
   },
   "dependencies": {
-    "firebase-admin": "^12.2.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "express-rate-limit": "^7.4.0",
+    "firebase-admin": "^12.2.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.14",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^8.0.10",
     "zod": "^3.23.8"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

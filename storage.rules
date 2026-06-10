@@ -7,11 +7,14 @@ service firebase.storage {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Public readable (resume, portfolio assets) — only signed-in users can write
+    // Public readable (resume, portfolio assets) — only the admin can write.
+    // (Previously any signed-in user — including anonymous — could overwrite
+    // the public resume PDF.)
     match /uploads/{allPaths=**} {
       allow read: if true;
       allow write: if
         request.auth != null &&
+        request.auth.token.role == 'admin' &&
         request.resource.size < 10 * 1024 * 1024 &&
         (request.resource.contentType.matches('application/pdf') ||
          request.resource.contentType.matches('image/.*'));

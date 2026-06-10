@@ -21,7 +21,12 @@ const VisitSchema = z.object({
 
 const EventSchema = z.object({
   name:       z.string().max(100),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.unknown())
+    .optional()
+    .refine(
+      (p) => !p || JSON.stringify(p).length <= 2000,
+      { message: 'properties too large' },
+    ),
 });
 
 // ── POST /api/analytics/visit (public) ─────────────────────────────────────

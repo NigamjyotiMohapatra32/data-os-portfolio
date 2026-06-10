@@ -46,9 +46,11 @@ app = FastAPI(
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
 ALLOWED_ORIGINS = [
+    "https://nigamjyotimohapatra32.github.io",  # GitHub Pages (current prod)
     "https://nigamjyoti.netlify.app",
     "http://localhost:3000",
     "http://localhost:4000",
+    "http://localhost:5173",
     os.getenv("EXTRA_ORIGIN", ""),
 ]
 
@@ -580,9 +582,10 @@ async def get_skill_categories():
 @app.exception_handler(Exception)
 async def global_handler(request: Request, exc: Exception):
     log.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+    detail = str(exc) if os.getenv("DEV") == "1" else "Unexpected error. Check server logs."
     return JSONResponse(
         status_code=500,
-        content={"ok": False, "error": "Internal server error", "detail": str(exc)},
+        content={"ok": False, "error": "Internal server error", "detail": detail},
     )
 
 

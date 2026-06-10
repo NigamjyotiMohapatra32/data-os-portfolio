@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { storage, db, auth } from '../lib/firebase';
-import { signInAnonymously } from 'firebase/auth';
+// NOTE: anonymous sign-in was removed — Firestore/Storage rules now require
+// the admin custom claim, which only the backend login flow provides.
 import {
   ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject, getMetadata,
 } from 'firebase/storage';
@@ -53,7 +54,12 @@ function fmtDate(ts) {
 }
 
 async function ensureAuth() {
-  if (!auth.currentUser) await signInAnonymously(auth);
+  if (!auth.currentUser) {
+    throw new Error(
+      'Admin features require a server-backed login (Firebase session). ' +
+      'Offline/dev login cannot modify site data — this is intentional.'
+    );
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

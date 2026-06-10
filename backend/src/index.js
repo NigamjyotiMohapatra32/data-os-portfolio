@@ -35,14 +35,23 @@ import analyticsRoutes from './routes/analytics.js';
 const app  = express();
 const PORT = process.env.PORT || 4000;
 
+// Behind Railway/Render/Heroku proxies: trust the first hop so req.ip and
+// express-rate-limit see the real client IP instead of the proxy's.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
 // ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet());
 
 // ── CORS ────────────────────────────────────────────────────────────────────
+// FRONTEND_URL accepts a comma-separated list, e.g.
+// "https://nigamjyotimohapatra32.github.io,https://nigamjyoti.netlify.app"
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
+  ...(process.env.FRONTEND_URL || '').split(',').map(o => o.trim()).filter(Boolean),
+  'https://nigamjyotimohapatra32.github.io',
   'http://localhost:3000',
   'http://localhost:4173',  // vite preview
+  'http://localhost:5173',  // vite default dev port
 ];
 
 app.use(cors({
@@ -82,9 +91,14 @@ app.use((req, res) => {
 
 // ── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
-  console.error('[error]', err.message);
+  console.error('[error]', err.stack || err.message);
   const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal server error.' });
+  // Never leak internal error details (stack traces, dependency messages)
+  // to clients on unexpected 5xx errors.
+  const message = status >= 500 && process.env.NODE_ENV === 'production'
+    ? 'Internal server error.'
+    : (err.message || 'Internal server error.');
+  res.status(status).json({ error: message });
 });
 
 // ── Start ────────────────────────────────────────────────────────────────────

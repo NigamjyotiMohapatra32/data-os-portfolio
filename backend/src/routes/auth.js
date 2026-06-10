@@ -8,7 +8,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { signToken, requireAuth } from '../middleware/auth.js';
-import { loginLimiter } from '../middleware/rateLimit.js';
+import { loginLimiter, apiLimiter } from '../middleware/rateLimit.js';
 import { adminAuth } from '../config/firebase.js';
 
 const router = Router();
@@ -24,10 +24,14 @@ const SessionSchema = z.object({
 });
 
 function cookieOptions() {
+  // When the frontend lives on a different origin than this API (GitHub
+  // Pages / Netlify frontend + Railway/Render backend), browsers only send
+  // cookies with SameSite=None; Secure. Same-origin deploys keep Strict.
+  const crossSite = process.env.CROSS_SITE_COOKIES === '1';
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: crossSite || process.env.NODE_ENV === 'production',
+    sameSite: crossSite ? 'none' : 'strict',
     maxAge: SESSION_MAX_AGE_MS,
   };
 }
@@ -79,7 +83,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   });
 });
 
-router.post('/session', async (req, res) => {
+router.post('/session', apiLimiter, async (req, res) => {
   const parsed = SessionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid session payload.' });
 
