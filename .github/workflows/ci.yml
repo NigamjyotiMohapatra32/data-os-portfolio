@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [20, 22]
+        node: [22]
 
     steps:
       - name: Checkout
@@ -80,7 +80,7 @@ jobs:
           echo "✅ All chunks within budget"
 
       - name: Upload build artifact
-        if: matrix.node == 20
+        if: matrix.node == 22
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [20]
+        node: [22]
 
     defaults:
       run:
