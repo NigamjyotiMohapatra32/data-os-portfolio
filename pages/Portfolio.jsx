@@ -9,6 +9,8 @@ import Navigation from '../components/Navigation';
 import BootScreen from '../components/BootScreen';
 import BackgroundCanvas from '../components/BackgroundCanvas';
 import CursorGlow from '../components/CursorGlow';
+import SchemaTrail from '../components/SchemaTrail';
+import ScrollQuery from '../components/ScrollQuery';
 
 // ── Below-the-fold: lazy-loaded on scroll for smaller initial bundle ─────────
 const BusinessAnalysis = lazy(() => import('../components/BusinessAnalysis'));
@@ -72,6 +74,8 @@ export default function Portfolio() {
       {showBoot && <BootScreen onSkip={handleSkipBoot} />}
       <BackgroundCanvas />
       <CursorGlow />
+      <SchemaTrail />
+      <ScrollQuery />
       <Navigation theme={theme} onThemeToggle={toggleTheme} />
 
       {/* Premium scanning line effect */}

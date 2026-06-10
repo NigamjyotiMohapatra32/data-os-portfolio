@@ -741,3 +741,64 @@ button:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Signature: ER cardinality dividers ───────────────────
+   The central rail reads as a relationship in crow's-foot
+   notation: one ──||──────◇──────<── many. An inside
+   signature for anyone who has ever drawn an ERD. */
+.section-divider::after {
+  width: 140px;
+  height: 11px;
+  background:
+    /* "one" mark: double tick on the left end */
+    linear-gradient(rgba(34,211,238,0.75), rgba(34,211,238,0.75)) 14px center / 1px 9px no-repeat,
+    linear-gradient(rgba(34,211,238,0.75), rgba(34,211,238,0.75)) 19px center / 1px 9px no-repeat,
+    /* "many" mark: crow's foot on the right end (inline SVG) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='11'%3E%3Cpath d='M0 5.5h4M4 5.5L11 0M4 5.5L11 5.5M4 5.5L11 11' stroke='%23a78bfa' stroke-opacity='0.8' stroke-width='1' fill='none'/%3E%3C/svg%3E") right 8px center / 12px 11px no-repeat,
+    /* rail */
+    linear-gradient(90deg, transparent, rgba(34,211,238,0.6), transparent) center / 140px 1px no-repeat;
+}
+
+/* ── Signature: scroll-as-SQL-query status chip ───────────── */
+.scroll-query {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 60;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  line-height: 1.7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(34,211,238,0.18);
+  background: linear-gradient(180deg, rgba(12,19,34,0.85), rgba(6,8,15,0.85));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 30px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04);
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease-sig);
+}
+
+.scroll-query-bar {
+  display: inline-block;
+  vertical-align: middle;
+  width: 64px;
+  height: 3px;
+  margin: 0 8px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.scroll-query-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--c-cyan), var(--c-violet));
+  transition: width 0.25s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-query { transition: none; }
+  .scroll-query-bar > span { transition: none; }
+}
